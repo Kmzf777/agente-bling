@@ -1,6 +1,6 @@
 const BASE = "https://api.bling.com.br/Api/v3";
 
-interface Opts { tokenManager: { getAccessToken(): Promise<string>; refresh(rt: string): Promise<string> };
+interface Opts { tokenManager: { getAccessToken(): Promise<string>; forceRefresh(): Promise<string> };
   fetchImpl?: typeof fetch; minIntervalMs?: number; }
 
 export class BlingClient {
@@ -27,7 +27,7 @@ export class BlingClient {
     const res = await this.fetchImpl(this.buildUrl(path, query), {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     });
-    if (res.status === 401 && !_retried) { return this.get<T>(path, query, true); }
+    if (res.status === 401 && !_retried) { await this.o.tokenManager.forceRefresh(); return this.get<T>(path, query, true); }
     if (res.status === 429 && !_retried) {
       const ra = Number(res.headers?.get?.("Retry-After")) || 1;
       await new Promise((r) => setTimeout(r, ra * 1000));

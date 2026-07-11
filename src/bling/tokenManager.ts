@@ -35,6 +35,12 @@ export class TokenManager {
     return this.refresh(t.refresh_token);
   }
 
+  // Força a renovação a partir do refresh_token salvo (usado em 401).
+  async forceRefresh(): Promise<string> {
+    const t = await this.read();
+    return this.refresh(t.refresh_token);
+  }
+
   async refresh(refreshToken: string): Promise<string> {
     const res = await this.o.fetchImpl(TOKEN_URL, {
       method: "POST",

@@ -36,4 +36,12 @@ describe("TokenManager", () => {
     expect(await tm.getAccessToken()).toBe("ok");
     expect(called).toBe(false);
   });
+
+  it("forceRefresh sempre renova a partir do token salvo", async () => {
+    await fs.writeFile(file, JSON.stringify({ access_token: "ok", refresh_token: "r", expires_at: 9_999_999_999 }));
+    const fetchImpl = async () =>
+      ({ ok: true, status: 200, json: async () => ({ access_token: "n", refresh_token: "r2", expires_in: 3600 }) } as any);
+    const tm = new TokenManager({ clientId: "c", clientSecret: "s", tokenFile: file, fetchImpl, now: () => 1000 });
+    expect(await tm.forceRefresh()).toBe("n");
+  });
 });
