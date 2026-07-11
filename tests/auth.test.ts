@@ -3,7 +3,7 @@ import request from "supertest";
 import { criarApp } from "../src/server";
 
 const cfg = { appPassword: "segredo", sessionSecret: "s", anthropicModel: "m", blingSituacaoFaturadoIds: [] } as any;
-const app = criarApp(cfg, { runAgent: async () => ({ texto: "ok" }), blingClient: {} as any });
+const app = criarApp(cfg, { runAgent: async () => ({ texto: "ok" }) });
 
 describe("auth", () => {
   it("rejeita /api/chat sem sessão", async () => {

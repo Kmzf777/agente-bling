@@ -13,7 +13,7 @@ describe("TokenManager", () => {
   it("renova quando o token está expirado e persiste o novo", async () => {
     await fs.writeFile(file, JSON.stringify({ access_token: "velho", refresh_token: "r1", expires_at: 1000 }));
     const calls: any[] = [];
-    const fetchImpl = async (url: string, init: any) => {
+    const fetchImpl = async (url: any, init?: any) => {
       calls.push({ url, init });
       return { ok: true, status: 200, json: async () => ({ access_token: "novo", refresh_token: "r2", expires_in: 3600 }) } as any;
     };

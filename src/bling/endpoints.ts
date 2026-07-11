@@ -4,7 +4,7 @@ export interface FiltroData { dataInicial: string; dataFinal: string; situacoes?
 
 export async function listarPedidosVenda(c: BlingClient, f: FiltroData): Promise<any[]> {
   const query: Record<string, unknown> = { dataInicial: f.dataInicial, dataFinal: f.dataFinal };
-  if (f.situacoes?.length) query["idsSituacoes[]"] = f.situacoes.join(",");
+  if (f.situacoes?.length) query["idsSituacoes[]"] = f.situacoes;
   return c.getAllPages("/pedidos/vendas", query);
 }
 export async function obterPedidoVenda(c: BlingClient, id: number): Promise<any> {

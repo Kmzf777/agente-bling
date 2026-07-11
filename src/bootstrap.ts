@@ -14,9 +14,8 @@ export function iniciar() {
   const blingClient = new BlingClient({ tokenManager });
 
   const app = criarApp(cfg, {
-    blingClient,
     runAgent: ({ mensagens }) => runAgent({
-      anthropic, model: cfg.anthropicModel, mensagens,
+      anthropic, model: cfg.anthropicModel, mensagens: mensagens as any,
       deps: { client: blingClient, situacoesFaturado: cfg.blingSituacaoFaturadoIds },
     }),
   });

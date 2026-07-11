@@ -18,7 +18,11 @@ export class BlingClient {
   }
   private buildUrl(path: string, query: Record<string, unknown> = {}) {
     const u = new URL(BASE + path);
-    for (const [k, v] of Object.entries(query)) if (v !== undefined && v !== null) u.searchParams.set(k, String(v));
+    for (const [k, v] of Object.entries(query)) {
+      if (v === undefined || v === null) continue;
+      if (Array.isArray(v)) for (const item of v) u.searchParams.append(k, String(item));
+      else u.searchParams.set(k, String(v));
+    }
     return u.toString();
   }
   async get<T = any>(path: string, query: Record<string, unknown> = {}, _retried = false): Promise<T> {

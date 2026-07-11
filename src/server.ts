@@ -5,8 +5,7 @@ import { exigirAuth } from "./auth";
 import type { AppConfig } from "./config";
 
 export interface ServerDeps {
-  runAgent: (args: any) => Promise<{ texto: string }>;
-  blingClient: any;
+  runAgent: (args: { mensagens: unknown[] }) => Promise<{ texto: string }>;
 }
 
 export function criarApp(cfg: AppConfig, deps: ServerDeps): Express {
@@ -36,7 +35,10 @@ export function criarApp(cfg: AppConfig, deps: ServerDeps): Express {
 
   const webDist = path.resolve("web/dist");
   app.use(express.static(webDist));
-  app.get("*", (_req, res) => res.sendFile(path.join(webDist, "index.html")));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) return next();
+    res.sendFile(path.join(webDist, "index.html"));
+  });
 
   return app;
 }

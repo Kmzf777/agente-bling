@@ -33,6 +33,7 @@ export async function runAgent(p: RunAgentParams): Promise<{ texto: string }> {
         toolResults.push({ type: "tool_result", tool_use_id: bloco.id, is_error: true, content: String(e) });
       }
     }
+    if (toolResults.length === 0) return { texto: extrairTexto(resp) };
     messages.push({ role: "user", content: toolResults });
   }
   return { texto: "Não consegui concluir por atingir o limite de consultas. Tente refinar a pergunta." };
