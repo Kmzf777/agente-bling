@@ -111,3 +111,10 @@ Após preencher `.env` e rodar `npm run bling:auth`, valide de ponta a ponta:
 
 > Este passo depende das suas credenciais reais do Bling/Anthropic e por isso **não** é executado
 > automaticamente pela suíte de testes.
+
+### Pontos a validar contra a API real do Bling
+Alguns detalhes da API v3 só se confirmam com dados reais. Se alguma consulta vier vazia ou errada, verifique:
+- **Estoque:** o recurso `GET /estoques/saldos` pode exigir `idsProdutos[]` na sua conta. Se `consultar_estoque` vier vazio, é o primeiro suspeito (ver `src/bling/endpoints.ts`).
+- **Produção:** os campos de `GET /ordens-producao` (`situacao`, `quantidade`) podem ter nomes/formatos diferentes; ajuste `src/tools/consultarProducao.ts` conforme a resposta real.
+- **Faturamento:** confirme os IDs em `BLING_SITUACAO_FATURADO_IDS` (o filtro já é enviado como chaves repetidas `idsSituacoes[]=…`).
+- **Datas:** confirme se `dataFinal` é inclusivo nos pedidos de venda.
