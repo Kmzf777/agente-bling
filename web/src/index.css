@@ -2,12 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/fraunces";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
+    --font-heading: 'Fraunces Variable', 'Fraunces', ui-serif, Georgia, serif;
+    --font-serif: 'Fraunces Variable', 'Fraunces', ui-serif, Georgia, serif;
+    --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,6 +41,9 @@
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
+    /* Signature crema / coffee-cherry accents */
+    --color-crema: var(--crema);
+    --color-cereja: var(--cereja);
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -48,73 +53,85 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * "Canastra" — café artesanal da Serra da Canastra.
+ * Elevated warm dark theme: espresso backgrounds, latte-cream text,
+ * terracotta/coffee-cherry ("cereja") accent, golden crema highlight.
+ * Hues kept in the warm 40–75 band so nothing reads clinical/cold.
+ */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    /* Light "café com leite" — warm parchment. Kept legible & tasteful. */
+    --background: oklch(0.965 0.012 78);
+    --foreground: oklch(0.245 0.024 55);
+    --card: oklch(0.99 0.008 82);
+    --card-foreground: oklch(0.245 0.024 55);
+    --popover: oklch(0.99 0.008 82);
+    --popover-foreground: oklch(0.245 0.024 55);
+    --primary: oklch(0.505 0.14 45);
+    --primary-foreground: oklch(0.985 0.01 80);
+    --secondary: oklch(0.93 0.018 74);
+    --secondary-foreground: oklch(0.33 0.03 52);
+    --muted: oklch(0.93 0.016 76);
+    --muted-foreground: oklch(0.505 0.028 58);
+    --accent: oklch(0.9 0.032 66);
+    --accent-foreground: oklch(0.33 0.05 48);
+    --destructive: oklch(0.55 0.2 27);
+    --border: oklch(0.885 0.02 68);
+    --input: oklch(0.885 0.02 68);
+    --ring: oklch(0.575 0.13 48);
+    --crema: oklch(0.7 0.13 72);
+    --cereja: oklch(0.52 0.16 38);
+    --chart-1: oklch(0.55 0.15 44);
+    --chart-2: oklch(0.66 0.12 66);
+    --chart-3: oklch(0.7 0.13 88);
+    --chart-4: oklch(0.48 0.09 52);
+    --chart-5: oklch(0.4 0.07 46);
+    --radius: 0.75rem;
+    --sidebar: oklch(0.945 0.014 76);
+    --sidebar-foreground: oklch(0.245 0.024 55);
+    --sidebar-primary: oklch(0.505 0.14 45);
+    --sidebar-primary-foreground: oklch(0.985 0.01 80);
+    --sidebar-accent: oklch(0.9 0.032 66);
+    --sidebar-accent-foreground: oklch(0.33 0.05 48);
+    --sidebar-border: oklch(0.885 0.02 68);
+    --sidebar-ring: oklch(0.575 0.13 48);
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    /* Elevated espresso — the signature look. Warm, calm, premium. */
+    --background: oklch(0.185 0.016 52);
+    --foreground: oklch(0.925 0.018 78);
+    --card: oklch(0.225 0.018 50);
+    --card-foreground: oklch(0.93 0.018 78);
+    --popover: oklch(0.225 0.018 50);
+    --popover-foreground: oklch(0.93 0.018 78);
+    --primary: oklch(0.66 0.135 52);
+    --primary-foreground: oklch(0.16 0.02 46);
+    --secondary: oklch(0.285 0.022 50);
+    --secondary-foreground: oklch(0.9 0.02 76);
+    --muted: oklch(0.275 0.018 50);
+    --muted-foreground: oklch(0.68 0.026 68);
+    --accent: oklch(0.33 0.038 52);
+    --accent-foreground: oklch(0.92 0.02 76);
+    --destructive: oklch(0.62 0.17 30);
+    --border: oklch(0.92 0.02 78 / 12%);
+    --input: oklch(0.92 0.02 78 / 15%);
+    --ring: oklch(0.66 0.135 52);
+    --crema: oklch(0.78 0.13 76);
+    --cereja: oklch(0.62 0.17 36);
+    --chart-1: oklch(0.66 0.135 52);
+    --chart-2: oklch(0.74 0.12 74);
+    --chart-3: oklch(0.7 0.14 90);
+    --chart-4: oklch(0.56 0.1 46);
+    --chart-5: oklch(0.46 0.08 44);
+    --sidebar: oklch(0.205 0.016 50);
+    --sidebar-foreground: oklch(0.925 0.018 78);
+    --sidebar-primary: oklch(0.66 0.135 52);
+    --sidebar-primary-foreground: oklch(0.16 0.02 46);
+    --sidebar-accent: oklch(0.33 0.038 52);
+    --sidebar-accent-foreground: oklch(0.92 0.02 76);
+    --sidebar-border: oklch(0.92 0.02 78 / 12%);
+    --sidebar-ring: oklch(0.66 0.135 52);
 }
 
 @layer base {
@@ -123,8 +140,75 @@
     }
   body {
     @apply bg-background text-foreground;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
     }
   html {
     @apply font-sans;
     }
+  /* Editorial serif for headings — the artisanal signature. */
+  h1, h2, h3 {
+    @apply font-heading;
+    font-optical-sizing: auto;
+  }
+}
+
+@layer components {
+  /*
+   * Grain overlay — fine analog texture, like the paper of a coffee bag.
+   * Fixed, non-interactive, blended over the whole surface.
+   */
+  .canastra-grain::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Warm topographic contour — a whisper of the Serra da Canastra ridgelines. */
+  .canastra-topo {
+    background-image:
+      radial-gradient(120% 120% at 100% 0%, transparent 60%, color-mix(in oklch, var(--crema) 40%, transparent) 100%),
+      repeating-radial-gradient(
+        circle at 82% 8%,
+        transparent 0,
+        transparent 34px,
+        color-mix(in oklch, var(--foreground) 4%, transparent) 34px,
+        color-mix(in oklch, var(--foreground) 4%, transparent) 35px
+      );
+  }
+}
+
+@layer utilities {
+  /* Subtle rising-steam drift for the "thinking" dots. */
+  @keyframes canastra-steam {
+    0%, 100% { transform: translateY(0); opacity: 0.35; }
+    50%      { transform: translateY(-3px); opacity: 1; }
+  }
+  .animate-steam {
+    animation: canastra-steam 1.4s ease-in-out infinite;
+  }
+
+  /* Staggered rise-in used across the login + first paint. */
+  @keyframes canastra-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-rise {
+    animation: canastra-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Message bubble entrance. */
+  @keyframes canastra-pour {
+    from { opacity: 0; transform: translateY(6px) scale(0.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .animate-pour {
+    animation: canastra-pour 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 }
