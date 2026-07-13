@@ -1,3 +1,4 @@
+import "dotenv/config";
 import http from "node:http";
 import { randomBytes } from "node:crypto";
 import { loadConfig } from "../config";

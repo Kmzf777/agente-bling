@@ -1,13 +1,14 @@
-import Anthropic from "@anthropic-ai/sdk";
+import "dotenv/config";
+import OpenAI from "openai";
 import { loadConfig } from "./config";
 import { TokenManager } from "./bling/tokenManager";
 import { BlingClient } from "./bling/blingClient";
-import { runAgent } from "./agent/claudeClient";
+import { runAgent } from "./agent/agentLoop";
 import { criarApp } from "./server";
 
 export function iniciar() {
   const cfg = loadConfig();
-  const anthropic = new Anthropic({ apiKey: cfg.anthropicApiKey });
+  const openai = new OpenAI({ apiKey: cfg.openaiApiKey });
   const tokenManager = new TokenManager({
     clientId: cfg.blingClientId, clientSecret: cfg.blingClientSecret, tokenFile: ".bling-tokens.json",
   });
@@ -15,7 +16,7 @@ export function iniciar() {
 
   const app = criarApp(cfg, {
     runAgent: ({ mensagens }) => runAgent({
-      anthropic, model: cfg.anthropicModel, mensagens: mensagens as any,
+      openai, model: cfg.openaiModel, mensagens: mensagens as any,
       deps: { client: blingClient, situacoesFaturado: cfg.blingSituacaoFaturadoIds },
     }),
   });
