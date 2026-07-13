@@ -10,9 +10,6 @@ export async function listarPedidosVenda(c: BlingClient, f: FiltroData): Promise
 export async function obterPedidoVenda(c: BlingClient, id: number): Promise<any> {
   return c.get(`/pedidos/vendas/${id}`);
 }
-export async function listarSaldosEstoque(c: BlingClient): Promise<any[]> {
-  return c.getAllPages("/estoques/saldos");
-}
 export async function listarProdutos(c: BlingClient): Promise<any[]> {
   return c.getAllPages("/produtos");
 }

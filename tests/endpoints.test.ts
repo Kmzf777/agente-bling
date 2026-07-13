@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { listarPedidosVenda, listarSaldosEstoque, listarOrdensProducao } from "../src/bling/endpoints";
+import { listarPedidosVenda, listarOrdensProducao } from "../src/bling/endpoints";
 
 function fakeClient(pages: any[]) {
   const calls: any[] = [];
@@ -21,10 +21,5 @@ describe("endpoints", () => {
     const { client, calls } = fakeClient([]);
     await listarOrdensProducao(client, { dataInicial: "2026-07-01", dataFinal: "2026-07-08" });
     expect(calls[0].path).toBe("/ordens-producao");
-  });
-  it("listarSaldosEstoque chama o recurso de saldos", async () => {
-    const { client, calls } = fakeClient([{ produto: { id: 1 }, saldoVirtualTotal: 10 }]);
-    await listarSaldosEstoque(client);
-    expect(calls[0].path).toBe("/estoques/saldos");
   });
 });

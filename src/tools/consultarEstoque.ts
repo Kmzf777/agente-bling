@@ -1,5 +1,5 @@
 import type { BlingClient } from "../bling/blingClient";
-import { listarProdutos, listarSaldosEstoque } from "../bling/endpoints";
+import { listarProdutos } from "../bling/endpoints";
 
 export interface EstoqueDeps { client: BlingClient; }
 export interface EstoqueArgs { filtro: "abaixo_minimo" | "todos" | "busca"; termo?: string; }
@@ -7,13 +7,11 @@ export interface EstoqueArgs { filtro: "abaixo_minimo" | "todos" | "busca"; term
 function normaliza(s: string) { return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
 
 export async function consultarEstoque(deps: EstoqueDeps, args: EstoqueArgs) {
-  const [produtos, saldos] = await Promise.all([listarProdutos(deps.client), listarSaldosEstoque(deps.client)]);
-  const saldoPorId = new Map<number, number>();
-  for (const s of saldos) saldoPorId.set(s.produto?.id, Number(s.saldoVirtualTotal) || 0);
-
+  const produtos = await listarProdutos(deps.client);
   let itens = produtos.map((p) => ({
     id: p.id, nome: p.nome, codigo: p.codigo,
-    saldo: saldoPorId.get(p.id) ?? 0, minimo: Number(p.estoque?.minimo) || 0,
+    saldo: Number(p.estoque?.saldoVirtualTotal) || 0,
+    minimo: Number(p.estoque?.minimo) || 0,
   }));
 
   if (args.filtro === "abaixo_minimo") itens = itens.filter((i) => i.minimo > 0 && i.saldo < i.minimo);
