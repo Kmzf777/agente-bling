@@ -4,7 +4,7 @@ Assistente de IA em formato de **chat web** para uma empresa de café. Você per
 linguagem natural sobre **vendas, faturamento, estoque e produção** e o agente responde com
 dados **ao vivo** do ERP **Bling** (API v3), incluindo um **relatório diário sob demanda**.
 
-- **Backend:** Node + TypeScript (Express) rodando um agente Claude com *tool use*.
+- **Backend:** Node + TypeScript (Express) rodando um agente OpenAI com *function calling*.
 - **Frontend:** React + Vite + Tailwind + shadcn/ui.
 - **Somente leitura:** o agente nunca escreve/altera nada no Bling.
 - **Sem banco de dados:** o histórico da conversa vive no navegador; os tokens do Bling ficam em `.bling-tokens.json`.
@@ -14,7 +14,7 @@ dados **ao vivo** do ERP **Bling** (API v3), incluindo um **relatório diário s
 ## Pré-requisitos
 - **Node.js ≥ 20**.
 - Uma conta **Bling** com um **aplicativo** criado no [portal de desenvolvedor](https://developer.bling.com.br/) (você já tem o **Client ID** e **Client Secret** da API v3).
-- Uma **chave de API da Anthropic** (`ANTHROPIC_API_KEY`).
+- Uma **chave de API da OpenAI** (`OPENAI_API_KEY`).
 
 ## Configuração (passo a passo)
 
@@ -24,8 +24,8 @@ dados **ao vivo** do ERP **Bling** (API v3), incluindo um **relatório diário s
    ```
    | Variável | O que é |
    |---|---|
-   | `ANTHROPIC_API_KEY` | Sua chave da Anthropic. |
-   | `ANTHROPIC_MODEL` | Modelo. Padrão `claude-haiku-4-5` (barato/rápido). Suba para `claude-sonnet-4-6` se quiser mais raciocínio. |
+   | `OPENAI_API_KEY` | Sua chave da OpenAI. |
+   | `OPENAI_MODEL` | Modelo. Padrão `gpt-4.1-mini` (barato/rápido). Suba para `gpt-4o` se quiser mais raciocínio. |
    | `BLING_CLIENT_ID` / `BLING_CLIENT_SECRET` | Credenciais do seu app Bling. |
    | `BLING_REDIRECT_URI` | Padrão `http://localhost:3000/api/bling/callback`. **Deve ser idêntica** à URL de redirecionamento cadastrada no seu app Bling. |
    | `BLING_SITUACAO_FATURADO_IDS` | IDs (separados por vírgula) das situações consideradas "faturado" (ver abaixo). |
@@ -83,7 +83,7 @@ npm --prefix web run dev    # frontend (Vite) — abre a URL do Vite; /api é pr
 ## Deploy: backend local + ngrok + frontend na Vercel
 Cenário: o **backend roda na sua máquina**, exposto à internet via **ngrok**, e o **frontend fica na Vercel**. Como ficam em domínios diferentes, a auth é por **token Bearer** (não cookie) e o backend tem **CORS** liberado.
 
-1. **Backend local:** preencha o `.env` (inclusive `ANTHROPIC_API_KEY`), rode `npm run bling:auth` uma vez (com `BLING_REDIRECT_URI=http://localhost:3000/api/bling/callback` registrado no app Bling) e depois `npm start` (porta 3000).
+1. **Backend local:** preencha o `.env` (inclusive `OPENAI_API_KEY`), rode `npm run bling:auth` uma vez (com `BLING_REDIRECT_URI=http://localhost:3000/api/bling/callback` registrado no app Bling) e depois `npm start` (porta 3000).
 2. **ngrok:** instale (https://ngrok.com/download, ou `choco install ngrok`, ou `npm i -g ngrok`), autentique com `ngrok config add-authtoken <SEU_TOKEN>` e exponha a porta:
    ```powershell
    ngrok http 3000
@@ -126,7 +126,7 @@ Após preencher `.env` e rodar `npm run bling:auth`, valide de ponta a ponta:
 2. Pergunte "quanto vendi hoje?", "o que está abaixo do mínimo no estoque?", "gere o relatório de hoje".
 3. Confira se os números batem com o que você vê no Bling.
 
-> Este passo depende das suas credenciais reais do Bling/Anthropic e por isso **não** é executado
+> Este passo depende das suas credenciais reais do Bling/OpenAI e por isso **não** é executado
 > automaticamente pela suíte de testes.
 
 ### Pontos a validar contra a API real do Bling
