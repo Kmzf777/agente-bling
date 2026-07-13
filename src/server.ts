@@ -1,7 +1,6 @@
 import express, { type Express } from "express";
-import cookieParser from "cookie-parser";
 import path from "node:path";
-import { exigirAuth } from "./auth";
+import { criarExigirAuth, tokenEsperado } from "./auth";
 import type { AppConfig } from "./config";
 
 export interface ServerDeps {
@@ -10,17 +9,29 @@ export interface ServerDeps {
 
 export function criarApp(cfg: AppConfig, deps: ServerDeps): Express {
   const app = express();
+
+  // CORS — o frontend (ex.: Vercel) e o backend (ngrok/local) ficam em origens
+  // diferentes. A autenticação é por token no header (não cookie), então liberar a
+  // origem é seguro: o acesso continua protegido pelo Bearer token.
+  const corsOrigin = cfg.corsOrigin || "*";
+  app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", corsOrigin);
+    res.header("Vary", "Origin");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, ngrok-skip-browser-warning");
+    if (req.method === "OPTIONS") return res.sendStatus(204);
+    next();
+  });
+
   app.use(express.json({ limit: "1mb" }));
-  app.use(cookieParser(cfg.sessionSecret));
+
+  const token = tokenEsperado(cfg.sessionSecret);
+  const exigirAuth = criarExigirAuth(token);
 
   app.post("/api/login", (req, res) => {
-    if (req.body?.senha === cfg.appPassword) {
-      res.cookie("auth", "1", { httpOnly: true, signed: true, sameSite: "lax", maxAge: 7 * 24 * 3600 * 1000 });
-      return res.json({ ok: true });
-    }
+    if (req.body?.senha === cfg.appPassword) return res.json({ token });
     res.status(401).json({ erro: "senha inválida" });
   });
-  app.post("/api/logout", (_req, res) => { res.clearCookie("auth"); res.json({ ok: true }); });
 
   app.post("/api/chat", exigirAuth, async (req, res) => {
     try {
@@ -33,6 +44,7 @@ export function criarApp(cfg: AppConfig, deps: ServerDeps): Express {
     }
   });
 
+  // Serve o frontend buildado (quando tudo roda local numa porta só).
   const webDist = path.resolve("web/dist");
   app.use(express.static(webDist));
   app.get("*", (req, res, next) => {

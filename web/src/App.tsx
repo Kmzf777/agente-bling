@@ -2,14 +2,20 @@ import { useState } from "react";
 
 import { Chat } from "@/components/Chat";
 import { Login } from "@/components/Login";
+import { estaAutenticado, logout } from "@/lib/api";
 
 function App() {
-  const [autenticado, setAutenticado] = useState(false);
+  const [autenticado, setAutenticado] = useState(estaAutenticado);
+
+  const sair = () => {
+    void logout();
+    setAutenticado(false);
+  };
 
   return (
     <div className="canastra-grain">
       {autenticado ? (
-        <Chat onLogout={() => setAutenticado(false)} />
+        <Chat onLogout={sair} />
       ) : (
         <Login onLogin={() => setAutenticado(true)} />
       )}

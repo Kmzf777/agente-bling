@@ -1,10 +1,15 @@
 /**
  * Cliente de API do "Canastra" — assistente do café.
  *
- * Todas as chamadas usam `credentials: "include"` para carregar o cookie de
- * sessão emitido pelo backend. Em desenvolvimento, o proxy do Vite encaminha
- * `/api/*` para o servidor Express.
+ * O frontend pode estar hospedado em outra origem (ex.: Vercel) e o backend
+ * exposto via ngrok/local. Por isso a autenticação é por **token Bearer**
+ * (guardado no navegador) e a base da API vem de `VITE_API_BASE`. O header
+ * `ngrok-skip-browser-warning` evita a página de aviso do ngrok em requisições.
  */
+
+const env = import.meta.env as unknown as Record<string, string | undefined>;
+const API_BASE = (env.VITE_API_BASE ?? "").replace(/\/$/, "");
+const TOKEN_KEY = "canastra_token";
 
 export type Mensagem = {
   role: "user" | "assistant";
@@ -12,9 +17,8 @@ export type Mensagem = {
 };
 
 /**
- * Lançada quando o backend responde 401 em `/api/chat`, indicando que a
- * sessão expirou ou não está autenticada. O app usa este tipo para
- * redirecionar de volta à tela de login sem perder a conversa.
+ * Lançada quando o backend responde 401 em `/api/chat` (sessão inválida/expirada).
+ * O app usa este tipo para redirecionar de volta ao login sem perder a conversa.
  */
 export class NaoAutenticado extends Error {
   constructor(mensagem = "Sessão não autenticada.") {
@@ -23,35 +27,49 @@ export class NaoAutenticado extends Error {
   }
 }
 
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function estaAutenticado(): boolean {
+  return !!getToken();
+}
+
+function montarHeaders(comAuth = true): Record<string, string> {
+  const h: Record<string, string> = {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
+  };
+  const token = getToken();
+  if (comAuth && token) h["Authorization"] = `Bearer ${token}`;
+  return h;
+}
+
 /**
- * Autentica com a senha do painel.
+ * Autentica com a senha do painel. Em caso de sucesso, guarda o token no navegador.
  * @returns `true` se a senha for aceita (200), `false` se inválida (401).
  * @throws Error para falhas de rede ou respostas inesperadas.
  */
 export async function login(senha: string): Promise<boolean> {
-  const resp = await fetch("/api/login", {
+  const resp = await fetch(`${API_BASE}/api/login`, {
     method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: montarHeaders(false),
     body: JSON.stringify({ senha }),
   });
 
-  if (resp.status === 200) return true;
+  if (resp.status === 200) {
+    const dados = (await resp.json()) as { token?: string };
+    if (dados.token) localStorage.setItem(TOKEN_KEY, dados.token);
+    return true;
+  }
   if (resp.status === 401) return false;
 
   throw new Error(`Falha ao entrar (HTTP ${resp.status}).`);
 }
 
-/** Encerra a sessão atual. Erros são silenciados — logout é "best effort". */
+/** Encerra a sessão local (remove o token do navegador). */
 export async function logout(): Promise<void> {
-  try {
-    await fetch("/api/logout", {
-      method: "POST",
-      credentials: "include",
-    });
-  } catch {
-    /* Ignorado: sair localmente já basta para a UI. */
-  }
+  localStorage.removeItem(TOKEN_KEY);
 }
 
 /**
@@ -63,10 +81,9 @@ export async function logout(): Promise<void> {
 export async function enviarChat(mensagens: Mensagem[]): Promise<string> {
   let resp: Response;
   try {
-    resp = await fetch("/api/chat", {
+    resp = await fetch(`${API_BASE}/api/chat`, {
       method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: montarHeaders(),
       body: JSON.stringify({ mensagens }),
     });
   } catch {

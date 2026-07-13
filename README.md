@@ -80,6 +80,21 @@ npm run dev                 # backend (tsx watch) em :3000
 npm --prefix web run dev    # frontend (Vite) — abre a URL do Vite; /api é proxied para :3000
 ```
 
+## Deploy: backend local + ngrok + frontend na Vercel
+Cenário: o **backend roda na sua máquina**, exposto à internet via **ngrok**, e o **frontend fica na Vercel**. Como ficam em domínios diferentes, a auth é por **token Bearer** (não cookie) e o backend tem **CORS** liberado.
+
+1. **Backend local:** preencha o `.env` (inclusive `ANTHROPIC_API_KEY`), rode `npm run bling:auth` uma vez (com `BLING_REDIRECT_URI=http://localhost:3000/api/bling/callback` registrado no app Bling) e depois `npm start` (porta 3000).
+2. **ngrok:** instale (https://ngrok.com/download, ou `choco install ngrok`, ou `npm i -g ngrok`), autentique com `ngrok config add-authtoken <SEU_TOKEN>` e exponha a porta:
+   ```powershell
+   ngrok http 3000
+   # ou, com domínio estático grátis (recomendado — URL fixa):
+   ngrok http --url=SEU-SUBDOMINIO.ngrok-free.app 3000
+   ```
+   Copie a URL `https://...ngrok-free.app`.
+3. **Vercel (frontend):** em *Settings → Environment Variables*, defina **`VITE_API_BASE`** com a URL do ngrok e **faça um novo deploy** (o Vite injeta a variável no build). Pronto: o frontend na Vercel passa a falar com seu backend local.
+
+> No plano free a URL do ngrok muda a cada reinício — reivindique o **domínio estático gratuito** para não ter que atualizar `VITE_API_BASE` toda vez.
+
 ## O que dá para perguntar
 - "Quanto vendi hoje / essa semana / esse mês?" · "Qual meu ticket médio?"
 - "Qual o faturamento do mês? E comparado ao mês passado?"
@@ -95,9 +110,11 @@ npm test            # suíte do backend (vitest)
 ## Segurança e produção
 - **Nunca** versione `.env` nem `.bling-tokens.json` (já estão no `.gitignore`).
 - O agente é **somente leitura**: não há nenhum caminho de código que escreva no Bling.
-- Para expor na internet (HTTPS): habilite o flag `secure: true` no cookie de sessão
-  (em `src/server.ts`) e coloque atrás de um proxy reverso com TLS. Em `localhost`/HTTP, o
-  `secure` fica desligado de propósito (senão o login não funcionaria).
+- **Autenticação por token:** o login devolve um token Bearer (derivado do `SESSION_SECRET`)
+  que o frontend guarda e envia no header `Authorization`. Não há cookie de sessão, o que
+  simplifica o uso cross-origin (frontend e backend em domínios diferentes).
+- **CORS:** liberado por `CORS_ORIGIN` (padrão `*`). Como a auth é por token, `*` é seguro;
+  em produção dá para restringir à URL do frontend.
 
 ## Fora do escopo do MVP
 WhatsApp · banco de dados · histórico persistente · relatório automático agendado/por e-mail ·

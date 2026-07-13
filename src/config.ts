@@ -7,6 +7,7 @@ export interface AppConfig {
   blingSituacaoFaturadoIds: number[];
   appPassword: string;
   sessionSecret: string;
+  corsOrigin: string;
   port: number;
 }
 
@@ -25,6 +26,7 @@ export function loadConfig(env: NodeJS.ProcessEnv | Record<string, string | unde
       .split(",").map((s) => s.trim()).filter(Boolean).map(Number),
     appPassword: env.APP_PASSWORD!,
     sessionSecret: env.SESSION_SECRET!,
+    corsOrigin: env.CORS_ORIGIN || "*",
     port: Number(env.PORT || 3000),
   };
 }
