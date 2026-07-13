@@ -1,6 +1,6 @@
 export interface AppConfig {
-  anthropicApiKey: string;
-  anthropicModel: string;
+  openaiApiKey: string;
+  openaiModel: string;
   blingClientId: string;
   blingClientSecret: string;
   blingRedirectUri: string;
@@ -11,14 +11,14 @@ export interface AppConfig {
   port: number;
 }
 
-const REQUIRED = ["ANTHROPIC_API_KEY", "BLING_CLIENT_ID", "BLING_CLIENT_SECRET", "APP_PASSWORD", "SESSION_SECRET"] as const;
+const REQUIRED = ["OPENAI_API_KEY", "BLING_CLIENT_ID", "BLING_CLIENT_SECRET", "APP_PASSWORD", "SESSION_SECRET"] as const;
 
 export function loadConfig(env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env): AppConfig {
   const missing = REQUIRED.filter((k) => !env[k]);
   if (missing.length) throw new Error(`Variáveis de ambiente ausentes: ${missing.join(", ")}`);
   return {
-    anthropicApiKey: env.ANTHROPIC_API_KEY!,
-    anthropicModel: env.ANTHROPIC_MODEL || "claude-haiku-4-5",
+    openaiApiKey: env.OPENAI_API_KEY!,
+    openaiModel: env.OPENAI_MODEL || "gpt-4.1-mini",
     blingClientId: env.BLING_CLIENT_ID!,
     blingClientSecret: env.BLING_CLIENT_SECRET!,
     blingRedirectUri: env.BLING_REDIRECT_URI || "http://localhost:3000/api/bling/callback",
