@@ -5,10 +5,18 @@ const REF = new Date("2026-07-08T12:00:00-03:00");
 const client = { getAllPages: async () => [{ total: 10 }] } as any;
 
 describe("registro de ferramentas", () => {
-  it("expõe as 5 ferramentas no formato OpenAI", () => {
+  it("expõe as 9 ferramentas no formato OpenAI", () => {
     const nomes = toolDefinitions.map((t) => t.function.name).sort();
     expect(nomes).toEqual([
-      "consultar_estoque", "consultar_faturamento", "consultar_producao", "consultar_vendas", "gerar_relatorio_diario",
+      "consultar_catalogo",
+      "consultar_clientes",
+      "consultar_estoque",
+      "consultar_faturamento",
+      "consultar_financeiro",
+      "consultar_pedidos",
+      "consultar_producao",
+      "consultar_vendas",
+      "gerar_relatorio_diario",
     ]);
     for (const t of toolDefinitions) {
       expect(t.type).toBe("function");

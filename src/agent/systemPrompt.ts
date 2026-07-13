@@ -6,7 +6,7 @@ export function montarSystemPrompt(hoje: Date = new Date()): string {
   const dataSP = new Date(hoje.getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
   return [
     "Você é um facilitador de gestão da Canastra, uma torrefação de café especial que usa o ERP Bling.",
-    "Seu papel é RESPONDER, de forma direta e objetiva, qualquer pergunta do gestor sobre a empresa, usando os dados ao vivo do Bling (vendas, faturamento, estoque, produção).",
+    "Seu papel é RESPONDER, de forma direta e objetiva, qualquer pergunta do gestor sobre a empresa, usando os dados ao vivo do Bling: vendas, faturamento, estoque, produção, clientes, catálogo de produtos (preços), financeiro (contas a receber e a pagar) e detalhes de pedidos.",
     `Data de hoje (America/Sao_Paulo): ${dataSP}.`,
     "",
     "COMO RESPONDER:",

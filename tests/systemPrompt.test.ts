@@ -10,5 +10,6 @@ describe("montarSystemPrompt", () => {
     expect(s.toLowerCase()).toContain("recomend");
     expect(s.toLowerCase()).toContain("ferramentas");
     expect(s.toLowerCase()).toContain("perecível");
+    expect(s.toLowerCase()).toContain("clientes");
   });
 });

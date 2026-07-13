@@ -4,6 +4,10 @@ import { consultarFaturamento } from "../tools/consultarFaturamento";
 import { consultarEstoque } from "../tools/consultarEstoque";
 import { consultarProducao } from "../tools/consultarProducao";
 import { gerarRelatorioDiario } from "../tools/relatorioDiario";
+import { consultarClientes } from "../tools/consultarClientes";
+import { consultarCatalogo } from "../tools/consultarCatalogo";
+import { consultarFinanceiro } from "../tools/consultarFinanceiro";
+import { consultarPedidos } from "../tools/consultarPedidos";
 
 export interface ToolDeps { client: BlingClient; situacoesFaturado: number[]; hoje?: Date; }
 
@@ -25,6 +29,14 @@ export const toolDefinitions = [
     parameters: { type: "object", properties: { ...periodoProp, situacao: { type: "string", enum: ["abertas", "concluidas", "todas"] } }, required: ["periodo"] } } },
   { type: "function", function: { name: "gerar_relatorio_diario", description: "Resumo do dia: vendas, faturamento, estoque crítico e produção.",
     parameters: { type: "object", properties: { data: { type: "string", enum: ["hoje", "ontem"] } } } } },
+  { type: "function", function: { name: "consultar_clientes", description: "Clientes: contagem total, busca por nome, ou maiores clientes por valor comprado num período.",
+    parameters: { type: "object", properties: { modo: { type: "string", enum: ["contagem", "busca", "maiores"] }, termo: { type: "string" }, ...periodoProp }, required: ["modo"] } } },
+  { type: "function", function: { name: "consultar_catalogo", description: "Catálogo de produtos: contagem, busca por nome, mais caros ou mais baratos (com preço e custo).",
+    parameters: { type: "object", properties: { modo: { type: "string", enum: ["contagem", "busca", "mais_caros", "mais_baratos"] }, termo: { type: "string" } }, required: ["modo"] } } },
+  { type: "function", function: { name: "consultar_financeiro", description: "Financeiro: contas a receber ou a pagar; total e itens, opcionalmente filtrando por vencimento num período.",
+    parameters: { type: "object", properties: { tipo: { type: "string", enum: ["a_receber", "a_pagar"] }, ...periodoProp }, required: ["tipo"] } } },
+  { type: "function", function: { name: "consultar_pedidos", description: "Pedidos de venda: maiores do período, detalhe de um pedido por número (com itens), ou pedidos de um cliente.",
+    parameters: { type: "object", properties: { modo: { type: "string", enum: ["maiores", "detalhe", "por_cliente"] }, numero: { type: "string" }, cliente: { type: "string" }, ...periodoProp }, required: ["modo"] } } },
 ] as const;
 
 export async function executarTool(nome: string, input: any, deps: ToolDeps): Promise<unknown> {
@@ -35,6 +47,10 @@ export async function executarTool(nome: string, input: any, deps: ToolDeps): Pr
     case "consultar_estoque": return consultarEstoque({ client: deps.client }, input);
     case "consultar_producao": return consultarProducao(base, input);
     case "gerar_relatorio_diario": return gerarRelatorioDiario({ ...base, situacoesFaturado: deps.situacoesFaturado }, input);
+    case "consultar_clientes": return consultarClientes({ client: deps.client, hoje: deps.hoje }, input);
+    case "consultar_catalogo": return consultarCatalogo({ client: deps.client }, input);
+    case "consultar_financeiro": return consultarFinanceiro({ client: deps.client, hoje: deps.hoje }, input);
+    case "consultar_pedidos": return consultarPedidos({ client: deps.client, hoje: deps.hoje }, input);
     default: throw new Error(`Ferramenta desconhecida: ${nome}`);
   }
 }
