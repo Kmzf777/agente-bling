@@ -54,10 +54,3 @@ export function criarApp(cfg: AppConfig, deps: ServerDeps): Express {
 
   return app;
 }
-
-// Sobe o servidor quando executado diretamente (não em testes)
-import { pathToFileURL } from "node:url";
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { iniciar } = await import("./bootstrap");
-  iniciar();
-}

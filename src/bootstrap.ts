@@ -22,3 +22,6 @@ export function iniciar() {
   });
   app.listen(cfg.port, () => console.log(`Agente Bling Café rodando em http://localhost:${cfg.port}`));
 }
+
+// Ponto de entrada: `tsx src/bootstrap.ts` (via npm start/dev) sobe o servidor.
+iniciar();
