@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { listarPedidosVenda, listarOrdensProducao } from "../src/bling/endpoints";
+import { listarPedidosVenda, listarOrdensProducao, listarContatos, listarContasReceber, listarContasPagar } from "../src/bling/endpoints";
 
 function fakeClient(pages: any[]) {
   const calls: any[] = [];
@@ -21,5 +21,12 @@ describe("endpoints", () => {
     const { client, calls } = fakeClient([]);
     await listarOrdensProducao(client, { dataInicial: "2026-07-01", dataFinal: "2026-07-08" });
     expect(calls[0].path).toBe("/ordens-producao");
+  });
+  it("listarContatos / listarContasReceber / listarContasPagar chamam os recursos certos", async () => {
+    const { client, calls } = fakeClient([]);
+    await listarContatos(client);
+    await listarContasReceber(client);
+    await listarContasPagar(client);
+    expect(calls.map((c: any) => c.path)).toEqual(["/contatos", "/contas/receber", "/contas/pagar"]);
   });
 });

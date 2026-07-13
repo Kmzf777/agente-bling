@@ -16,3 +16,12 @@ export async function listarProdutos(c: BlingClient): Promise<any[]> {
 export async function listarOrdensProducao(c: BlingClient, f: FiltroData): Promise<any[]> {
   return c.getAllPages("/ordens-producao", { dataInicial: f.dataInicial, dataFinal: f.dataFinal });
 }
+export async function listarContatos(c: BlingClient): Promise<any[]> {
+  return c.getAllPages("/contatos");
+}
+export async function listarContasReceber(c: BlingClient): Promise<any[]> {
+  return c.getAllPages("/contas/receber");
+}
+export async function listarContasPagar(c: BlingClient): Promise<any[]> {
+  return c.getAllPages("/contas/pagar");
+}
