@@ -6,6 +6,9 @@ import { TokenManager } from "./tokenManager";
 const cfg = loadConfig();
 const state = randomBytes(8).toString("hex");
 const url = new URL(cfg.blingRedirectUri);
+// Porta em que o servidor de setup escuta. Se o redirect for uma URL https sem porta
+// explícita (ex.: via ngrok), `url.port` fica vazio — então caímos na PORT do .env (3000).
+const listenPort = Number(url.port) || cfg.port;
 const tm = new TokenManager({ clientId: cfg.blingClientId, clientSecret: cfg.blingClientSecret, tokenFile: ".bling-tokens.json" });
 
 // URL de authorize confirmada via documentação oficial e exemplos da comunidade:
@@ -19,7 +22,7 @@ const authorizeUrl =
 console.log("\n1) Abra esta URL no navegador e autorize o app:\n\n" + authorizeUrl + "\n");
 
 const server = http.createServer(async (req, res) => {
-  const reqUrl = new URL(req.url!, `http://localhost:${url.port}`);
+  const reqUrl = new URL(req.url!, `http://localhost:${listenPort}`);
   if (reqUrl.pathname !== url.pathname) { res.writeHead(404).end(); return; }
   const code = reqUrl.searchParams.get("code");
   const gotState = reqUrl.searchParams.get("state");
@@ -36,4 +39,4 @@ const server = http.createServer(async (req, res) => {
     setTimeout(() => server.close(() => process.exit(0)), 500);
   }
 });
-server.listen(Number(url.port), () => console.log(`2) Aguardando callback em ${cfg.blingRedirectUri} ...`));
+server.listen(listenPort, () => console.log(`2) Aguardando callback em ${cfg.blingRedirectUri} (porta ${listenPort}) ...`));
