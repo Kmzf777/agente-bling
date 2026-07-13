@@ -36,6 +36,7 @@ export async function runAgent(p: RunAgentParams): Promise<{ texto: string }> {
         const resultado = await executarTool(tc.function.name, args, p.deps);
         content = JSON.stringify(resultado);
       } catch (e) {
+        console.error(`[ferramenta ${tc.function?.name}] falhou:`, e);
         content = `Erro ao executar ${tc.function?.name}: ${String(e)}`;
       }
       messages.push({ role: "tool", tool_call_id: tc.id, content });
