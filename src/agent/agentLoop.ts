@@ -1,46 +1,41 @@
-import { toolDefinitions, executarTool, type ToolDeps } from "./tools";
-import { montarSystemPrompt } from "./systemPrompt";
+import { streamText, stepCountIs, type LanguageModel } from "ai";
+import { construirTools, type ToolDeps } from "./tools";
 
 export interface Mensagem { role: "user" | "assistant"; content: any; }
+export interface AgentEvent { tipo: "tool" | "texto"; nome?: string; delta?: string; }
+
 export interface RunAgentParams {
-  openai: { chat: { completions: { create: (body: any) => Promise<any> } } };
-  model: string;
+  model: LanguageModel;
   mensagens: Mensagem[];
   deps: ToolDeps;
-  maxToolCalls?: number;
-  hoje?: Date;
+  systemPrompt: string;
+  maxSteps?: number;
+  onEvent?: (ev: AgentEvent) => void;
+  streamTextImpl?: typeof streamText; // injeção para testes
 }
 
+/**
+ * Loop agêntico multi-step sobre o Vercel AI SDK. O modelo planeja, chama tools do Bling,
+ * observa e refina até responder (até maxSteps passos). Quando onEvent é fornecido, emite
+ * eventos de tool-call e de texto (para streaming na UI).
+ */
 export async function runAgent(p: RunAgentParams): Promise<{ texto: string }> {
-  const maxToolCalls = p.maxToolCalls ?? 8;
-  const messages: any[] = [
-    { role: "system", content: montarSystemPrompt(p.hoje) },
-    ...p.mensagens,
-  ];
+  const impl = p.streamTextImpl ?? streamText;
+  const result: any = await impl({
+    model: p.model,
+    system: p.systemPrompt,
+    messages: p.mensagens as any,
+    tools: construirTools(p.deps),
+    stopWhen: stepCountIs(p.maxSteps ?? 20),
+  });
 
-  for (let i = 0; i < maxToolCalls; i++) {
-    const resp = await p.openai.chat.completions.create({
-      model: p.model,
-      messages,
-      tools: toolDefinitions,
-    });
-    const msg = resp.choices[0].message;
-    const toolCalls = msg.tool_calls ?? [];
-    if (toolCalls.length === 0) return { texto: (msg.content ?? "").trim() || "Sem resposta." };
-
-    messages.push({ role: "assistant", content: msg.content ?? null, tool_calls: toolCalls });
-    for (const tc of toolCalls) {
-      let content: string;
-      try {
-        const args = JSON.parse(tc.function.arguments || "{}");
-        const resultado = await executarTool(tc.function.name, args, p.deps);
-        content = JSON.stringify(resultado);
-      } catch (e) {
-        console.error(`[ferramenta ${tc.function?.name}] falhou:`, e);
-        content = `Erro ao executar ${tc.function?.name}: ${String(e)}`;
-      }
-      messages.push({ role: "tool", tool_call_id: tc.id, content });
+  if (p.onEvent && result.fullStream) {
+    for await (const part of result.fullStream) {
+      if (part.type === "tool-call") p.onEvent({ tipo: "tool", nome: part.toolName });
+      else if (part.type === "text-delta") p.onEvent({ tipo: "texto", delta: part.text ?? "" });
     }
   }
-  return { texto: "Não consegui concluir por atingir o limite de consultas. Tente refinar a pergunta." };
+
+  const texto = (await result.text)?.trim() || "Sem resposta.";
+  return { texto };
 }
