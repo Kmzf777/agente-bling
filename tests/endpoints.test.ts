@@ -36,6 +36,14 @@ describe("endpoints", () => {
     expect(calls[0].query.tipo).toBe(1);
     expect(calls[0].query["situacoes[]"]).toEqual([5]);
   });
+  it("listarContasPagar filtra por situacoes[] e datas de vencimento (server-side)", async () => {
+    const { client, calls } = fakeClient([]);
+    await listarContasPagar(client, { dataInicial: "2026-06-01", dataFinal: "2026-06-30", situacoes: [1] });
+    expect(calls[0].path).toBe("/contas/pagar");
+    expect(calls[0].query["situacoes[]"]).toEqual([1]);
+    expect(calls[0].query.dataVencimentoInicial).toBe("2026-06-01");
+    expect(calls[0].query.dataVencimentoFinal).toBe("2026-06-30");
+  });
   it("listarContatos / listarContasReceber / listarContasPagar chamam os recursos certos", async () => {
     const { client, calls } = fakeClient([]);
     await listarContatos(client);

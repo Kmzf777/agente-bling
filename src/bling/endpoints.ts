@@ -20,11 +20,19 @@ export async function listarOrdensProducao(c: BlingClient, f: FiltroData): Promi
 export async function listarContatos(c: BlingClient): Promise<Paginado> {
   return c.getAllPages("/contatos");
 }
-export async function listarContasReceber(c: BlingClient): Promise<Paginado> {
-  return c.getAllPages("/contas/receber");
+export interface FiltroConta { dataInicial?: string; dataFinal?: string; situacoes?: number[]; }
+function queryContas(f: FiltroConta): Record<string, unknown> {
+  const q: Record<string, unknown> = {};
+  if (f.dataInicial) q["dataVencimentoInicial"] = f.dataInicial;
+  if (f.dataFinal) q["dataVencimentoFinal"] = f.dataFinal;
+  if (f.situacoes?.length) q["situacoes[]"] = f.situacoes;
+  return q;
 }
-export async function listarContasPagar(c: BlingClient): Promise<Paginado> {
-  return c.getAllPages("/contas/pagar");
+export async function listarContasReceber(c: BlingClient, f: FiltroConta = {}): Promise<Paginado> {
+  return c.getAllPages("/contas/receber", queryContas(f));
+}
+export async function listarContasPagar(c: BlingClient, f: FiltroConta = {}): Promise<Paginado> {
+  return c.getAllPages("/contas/pagar", queryContas(f));
 }
 
 // --- Notas fiscais eletrônicas (NF-e) ---
