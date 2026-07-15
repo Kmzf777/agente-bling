@@ -40,5 +40,6 @@ export function resolverPeriodo(
     }
     case "este_mes": return { dataInicial: ymd(y, m, 1), dataFinal: hojeStr };
     case "mes_passado": return { dataInicial: ymd(y, m - 1, 1), dataFinal: ymd(y, m, 0) };
+    default: throw new Error(`período inválido: ${String(periodo)}`);
   }
 }

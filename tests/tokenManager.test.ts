@@ -44,4 +44,18 @@ describe("TokenManager", () => {
     const tm = new TokenManager({ clientId: "c", clientSecret: "s", tokenFile: file, fetchImpl, now: () => 1000 });
     expect(await tm.forceRefresh()).toBe("n");
   });
+
+  it("deduplica renovações concorrentes (single-flight): 1 refresh para N chamadas", async () => {
+    await fs.writeFile(file, JSON.stringify({ access_token: "velho", refresh_token: "r1", expires_at: 1000 }));
+    let refreshCalls = 0;
+    const fetchImpl = async () => {
+      refreshCalls++;
+      await new Promise((r) => setTimeout(r, 20));
+      return { ok: true, status: 200, json: async () => ({ access_token: "novo", refresh_token: "r2", expires_in: 3600 }) } as any;
+    };
+    const tm = new TokenManager({ clientId: "c", clientSecret: "s", tokenFile: file, fetchImpl, now: () => 2_000_000 });
+    const [a, b, c] = await Promise.all([tm.getAccessToken(), tm.getAccessToken(), tm.getAccessToken()]);
+    expect([a, b, c]).toEqual(["novo", "novo", "novo"]);
+    expect(refreshCalls).toBe(1);
+  });
 });

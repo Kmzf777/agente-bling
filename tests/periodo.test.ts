@@ -18,4 +18,6 @@ describe("resolverPeriodo", () => {
   it("personalizado usa as datas fornecidas", () =>
     expect(resolverPeriodo("personalizado", REF, "2026-01-01", "2026-01-31"))
       .toEqual({ dataInicial: "2026-01-01", dataFinal: "2026-01-31" }));
+  it("lança erro claro para período fora do enum (em vez de retornar undefined)", () =>
+    expect(() => resolverPeriodo("semana" as any, REF)).toThrow(/inválido/));
 });

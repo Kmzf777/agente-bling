@@ -46,4 +46,15 @@ describe("BlingClient", () => {
     expect(capturedUrl).toContain("idsSituacoes%5B%5D=9");
     expect(capturedUrl).toContain("idsSituacoes%5B%5D=12");
   });
+
+  it("serializa requisições concorrentes respeitando o intervalo (sem rajada)", async () => {
+    const tempos: number[] = [];
+    const fetchImpl = async () => { tempos.push(Date.now()); return { ok: true, status: 200, json: async () => ({ data: [] }) } as any; };
+    const c = new BlingClient({ tokenManager: tmFake, fetchImpl, minIntervalMs: 40 });
+    await Promise.all([c.get("/a"), c.get("/b"), c.get("/c"), c.get("/d")]);
+    tempos.sort((a, b) => a - b);
+    for (let i = 1; i < tempos.length; i++) {
+      expect(tempos[i] - tempos[i - 1]).toBeGreaterThanOrEqual(30);
+    }
+  });
 });

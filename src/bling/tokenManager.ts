@@ -32,13 +32,24 @@ export class TokenManager {
   async getAccessToken(): Promise<string> {
     const t = await this.read();
     if (this.o.now() < t.expires_at - MARGIN_MS) return t.access_token;
-    return this.refresh(t.refresh_token);
+    return this.dedupeRefresh(t.refresh_token);
   }
 
   // Força a renovação a partir do refresh_token salvo (usado em 401).
   async forceRefresh(): Promise<string> {
     const t = await this.read();
-    return this.refresh(t.refresh_token);
+    return this.dedupeRefresh(t.refresh_token);
+  }
+
+  // O Bling ROTACIONA o refresh_token a cada uso. Se N chamadas concorrentes renovassem
+  // ao mesmo tempo, só a 1ª venceria e as outras usariam um token já invalidado → falha.
+  // Aqui deduplicamos: renovações simultâneas compartilham UMA única promessa (single-flight).
+  private inFlightRefresh: Promise<string> | null = null;
+  private dedupeRefresh(refreshToken: string): Promise<string> {
+    if (!this.inFlightRefresh) {
+      this.inFlightRefresh = this.refresh(refreshToken).finally(() => { this.inFlightRefresh = null; });
+    }
+    return this.inFlightRefresh;
   }
 
   async refresh(refreshToken: string): Promise<string> {
