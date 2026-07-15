@@ -1,5 +1,5 @@
 import type { BlingClient } from "../bling/blingClient";
-import { listarNotasFiscais } from "../bling/endpoints";
+import { listarNotasFiscais, obterNotaFiscal } from "../bling/endpoints";
 import { resolverPeriodo, type Periodo } from "../util/periodo";
 
 export interface NfDeps { client: BlingClient; }
@@ -18,8 +18,28 @@ export async function consultarNotasFiscais(deps: NfDeps, args: NfArgs, hoje: Da
     tipo: args.tipo,
   });
 
-  const agrupado = new Map<string, GrupoCfop>();
+  // O endpoint de LISTA de NF-e pode não trazer os itens (CFOP) por nota. Quando faltarem,
+  // buscamos o detalhe (GET /nfe/{id}), com um teto para respeitar o rate limit do Bling.
+  const MAX_DETALHE = 80;
+  let detalhesBuscados = 0;
+  const comItens: any[] = [];
   for (const nota of notas) {
+    if ((nota.itens?.length ?? 0) > 0 || nota.id == null || detalhesBuscados >= MAX_DETALHE) {
+      comItens.push(nota);
+      continue;
+    }
+    detalhesBuscados++;
+    try {
+      const full: any = await obterNotaFiscal(deps.client, nota.id);
+      const d = full?.data ?? full;
+      comItens.push({ ...nota, itens: d?.itens ?? [] });
+    } catch {
+      comItens.push(nota);
+    }
+  }
+
+  const agrupado = new Map<string, GrupoCfop>();
+  for (const nota of comItens) {
     for (const it of (nota.itens ?? [])) {
       const cfop = String(it.cfop ?? "sem-cfop");
       const cur = agrupado.get(cfop) ?? { cfop, bonificacao: CFOP_BONIFICACAO.has(cfop), valor: 0, quantidade: 0, itens: 0 };

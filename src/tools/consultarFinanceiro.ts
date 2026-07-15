@@ -12,13 +12,24 @@ const SITUACAO_PAGO = new Set([2]);
 export async function consultarFinanceiro(deps: FinanceiroDeps, args: FinanceiroArgs, hoje: Date = deps.hoje ?? new Date()) {
   const periodo = args.periodo ? resolverPeriodo(args.periodo, hoje, args.dataInicial, args.dataFinal) : undefined;
   const filtro = periodo ? { dataInicial: periodo.dataInicial, dataFinal: periodo.dataFinal } : {};
-  const { itens: contas, truncado } = args.tipo === "a_receber"
+  const { itens: todas, truncado } = args.tipo === "a_receber"
     ? await listarContasReceber(deps.client, filtro)
     : await listarContasPagar(deps.client, filtro);
 
+  // O filtro de período já é enviado ao servidor; reforçamos por vencimento no cliente
+  // (defensivo: se a API ignorar os params de data, ainda respeitamos o período pedido).
+  const contas = periodo
+    ? todas.filter((c: any) => {
+        const v = String(c.vencimento || "").slice(0, 10);
+        return v >= periodo.dataInicial && v <= periodo.dataFinal;
+      })
+    : todas;
+
   const val = (c: any) => Number(c.valor) || 0;
-  const pago = contas.filter((c: any) => SITUACAO_PAGO.has(Number(c.situacao)));
-  const emAberto = contas.filter((c: any) => !SITUACAO_PAGO.has(Number(c.situacao)));
+  // situacao pode vir como número (2) ou objeto ({ id: 2, ... }) na API v3.
+  const ehPago = (c: any) => SITUACAO_PAGO.has(Number(c.situacao?.id ?? c.situacao));
+  const pago = contas.filter(ehPago);
+  const emAberto = contas.filter((c: any) => !ehPago(c));
   const soma = (arr: any[]) => Math.round(arr.reduce((s, c) => s + val(c), 0) * 100) / 100;
 
   return {

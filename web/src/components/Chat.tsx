@@ -334,7 +334,7 @@ function AgenteAoVivo({ estado }: { estado: EstadoStream }) {
                 const ativo = !temTexto && i === estado.ferramentas.length - 1;
                 return (
                   <li
-                    key={i}
+                    key={`${nome}-${i}`}
                     className="animate-pour flex items-center gap-2 text-xs"
                     style={{ animationDelay: `${i * 40}ms` }}
                   >

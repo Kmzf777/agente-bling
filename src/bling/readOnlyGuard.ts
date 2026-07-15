@@ -4,7 +4,7 @@
 const PREFIXOS_LEITURA = [
   "/pedidos/vendas",
   "/produtos",
-  "/estoques/saldos",
+  "/estoques",
   "/ordens-producao",
   "/contatos",
   "/contas/pagar",

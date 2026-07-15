@@ -32,4 +32,18 @@ describe("consultarNotasFiscais", () => {
     expect(r.totalVenda).toBe(150);
     expect(r.totalBonificacao).toBe(30);
   });
+
+  it("busca o detalhe da NF (GET /nfe/{id}) quando a lista não traz itens", async () => {
+    const client: any = {
+      getAllPages: async () => ({ itens: [{ id: 7, numero: "7", dataEmissao: "2026-06-10" }], truncado: false }),
+      get: async (path: string) => {
+        expect(path).toBe("/nfe/7");
+        return { data: { id: 7, itens: [{ cfop: "5102", valor: 80, quantidade: 1 }] } };
+      },
+    };
+    const r: any = await consultarNotasFiscais({ client }, { periodo: "mes_passado" }, new Date("2026-07-15"));
+    expect(r.totalNotas).toBe(1);
+    expect(r.porCfop.find((c: any) => c.cfop === "5102")?.valor).toBe(80);
+    expect(r.totalVenda).toBe(80);
+  });
 });
