@@ -1,31 +1,37 @@
 import { describe, it, expect } from "vitest";
 import { consultarFinanceiro } from "../src/tools/consultarFinanceiro";
 
-const REF = new Date("2026-07-08T12:00:00-03:00");
-const client = {
-  getAllPages: async (path: string) => {
-    if (path === "/contas/receber") return { itens: [
-      { valor: 100, vencimento: "2026-07-05", contato: { nome: "Cliente A" } },
-      { valor: 200, vencimento: "2026-08-01", contato: { nome: "Cliente B" } },
-    ], truncado: false };
-    if (path === "/contas/pagar") return { itens: [{ valor: 50, vencimento: "2026-07-03", contato: { id: 9 } }], truncado: false };
-    return { itens: [], truncado: false };
-  },
-} as any;
+const REF = new Date("2026-07-15T12:00:00-03:00");
 
 describe("consultarFinanceiro", () => {
-  it("a_receber soma tudo quando não há período", async () => {
-    const r: any = await consultarFinanceiro({ client, hoje: REF }, { tipo: "a_receber" });
-    expect(r.total).toBe(300);
-    expect(r.quantidade).toBe(2);
+  it("separa pago x em aberto por situação (2 = pago; demais = em aberto)", async () => {
+    const contas = [
+      { valor: 100, vencimento: "2026-06-10", situacao: 2, contato: { nome: "A" } }, // pago
+      { valor: 50, vencimento: "2026-06-20", situacao: 1, contato: { nome: "B" } },  // em aberto
+      { valor: 25, vencimento: "2026-06-22", situacao: 3, contato: { nome: "C" } },  // parcial -> em aberto
+    ];
+    const client: any = { getAllPages: async () => ({ itens: contas, truncado: false }) };
+    const r: any = await consultarFinanceiro({ client, hoje: REF }, { tipo: "a_pagar", periodo: "mes_passado" });
+    expect(r.total).toBe(175);
+    expect(r.totalPago).toBe(100);
+    expect(r.totalEmAberto).toBe(75);
+    expect(r.quantidadePago).toBe(1);
+    expect(r.quantidadeEmAberto).toBe(2);
   });
-  it("a_receber filtra por vencimento no período (este_mes = 01..08/07)", async () => {
-    const r: any = await consultarFinanceiro({ client, hoje: REF }, { tipo: "a_receber", periodo: "este_mes" });
-    expect(r.total).toBe(100);
-    expect(r.quantidade).toBe(1);
+
+  it("aplica o período como filtro server-side de vencimento", async () => {
+    const calls: any[] = [];
+    const client: any = { getAllPages: async (path: string, query: any) => { calls.push({ path, query }); return { itens: [], truncado: false }; } };
+    await consultarFinanceiro({ client, hoje: REF }, { tipo: "a_receber", periodo: "mes_passado" });
+    expect(calls[0].path).toBe("/contas/receber");
+    expect(calls[0].query.dataVencimentoInicial).toBe("2026-06-01");
+    expect(calls[0].query.dataVencimentoFinal).toBe("2026-06-30");
   });
-  it("a_pagar soma contas a pagar", async () => {
-    const r: any = await consultarFinanceiro({ client, hoje: REF }, { tipo: "a_pagar" });
-    expect(r.total).toBe(50);
+
+  it("a_pagar consulta /contas/pagar", async () => {
+    const calls: any[] = [];
+    const client: any = { getAllPages: async (path: string) => { calls.push({ path }); return { itens: [], truncado: false }; } };
+    await consultarFinanceiro({ client, hoje: REF }, { tipo: "a_pagar" });
+    expect(calls[0].path).toBe("/contas/pagar");
   });
 });
