@@ -4,7 +4,7 @@ Assistente de IA em formato de **chat web** para uma empresa de café. Você per
 linguagem natural sobre **vendas, faturamento, estoque e produção** e o agente responde com
 dados **ao vivo** do ERP **Bling** (API v3), incluindo um **relatório diário sob demanda**.
 
-- **Backend:** Node + TypeScript (Express) rodando um agente OpenAI com *function calling*.
+- **Backend:** Node + TypeScript (Express) rodando um **agente autônomo** (Claude/Anthropic via Vercel AI SDK) com loop multi-step e *streaming*.
 - **Frontend:** React + Vite + Tailwind + shadcn/ui.
 - **Somente leitura:** o agente nunca escreve/altera nada no Bling.
 - **Sem banco de dados:** o histórico da conversa vive no navegador; os tokens do Bling ficam em `.bling-tokens.json`.
@@ -14,7 +14,7 @@ dados **ao vivo** do ERP **Bling** (API v3), incluindo um **relatório diário s
 ## Pré-requisitos
 - **Node.js ≥ 20**.
 - Uma conta **Bling** com um **aplicativo** criado no [portal de desenvolvedor](https://developer.bling.com.br/) (você já tem o **Client ID** e **Client Secret** da API v3).
-- Uma **chave de API da OpenAI** (`OPENAI_API_KEY`).
+- Uma **chave de API da Anthropic** (`ANTHROPIC_API_KEY`) — o agente usa Claude por padrão.
 
 ## Configuração (passo a passo)
 
@@ -24,8 +24,10 @@ dados **ao vivo** do ERP **Bling** (API v3), incluindo um **relatório diário s
    ```
    | Variável | O que é |
    |---|---|
-   | `OPENAI_API_KEY` | Sua chave da OpenAI. |
-   | `OPENAI_MODEL` | Modelo. Padrão `gpt-4.1-mini` (barato/rápido). Suba para `gpt-4o` se quiser mais raciocínio. |
+   | `ANTHROPIC_API_KEY` | Sua chave da Anthropic (Claude). |
+   | `AGENT_MODEL` | Modelo. Padrão `claude-sonnet-4-6` (ótimo custo/qualidade). |
+   | `AGENT_PROVIDER` | Provider do agente. Padrão `anthropic`. |
+   | `AGENT_MAX_STEPS` | Máx. de passos do loop agêntico (padrão `20`). |
    | `BLING_CLIENT_ID` / `BLING_CLIENT_SECRET` | Credenciais do seu app Bling. |
    | `BLING_REDIRECT_URI` | Padrão `http://localhost:3000/api/bling/callback`. **Deve ser idêntica** à URL de redirecionamento cadastrada no seu app Bling. |
    | `BLING_SITUACAO_FATURADO_IDS` | IDs (separados por vírgula) das situações consideradas "faturado" (ver abaixo). |
@@ -100,6 +102,8 @@ Cenário: o **backend roda na sua máquina**, exposto à internet via **ngrok**,
 - "Qual o faturamento do mês? E comparado ao mês passado?"
 - "O que está abaixo do estoque mínimo?" · "Quanto tenho do café X?"
 - "O que produzi essa semana?" · "Ordens de produção abertas?"
+- **NF-e/fiscal:** "Os produtos em NF foram CFOP de venda ou bonificação?" · "Quanto emiti em NF-e no mês?"
+- **Financeiro:** "Qual o total de contas pagas no mês passado?" (distingue **pago x em aberto**) · "Contas a receber vencendo essa semana?"
 - **"Gere o relatório de hoje"** (botão dedicado no chat).
 
 ## Testes
@@ -116,9 +120,12 @@ npm test            # suíte do backend (vitest)
 - **CORS:** liberado por `CORS_ORIGIN` (padrão `*`). Como a auth é por token, `*` é seguro;
   em produção dá para restringir à URL do frontend.
 
-## Fora do escopo do MVP
+## Fora do escopo
 WhatsApp · banco de dados · histórico persistente · relatório automático agendado/por e-mail ·
-NF-e · Financeiro (contas a pagar/receber) · múltiplos usuários com permissões.
+**escrita no Bling** (o agente é somente-leitura) · múltiplos usuários com permissões · sub-agentes (fase 2).
+
+> **NF-e/fiscal (CFOP, venda vs bonificação)** e **Financeiro (contas a pagar/receber, pago vs em aberto)**
+> agora estão **no escopo** — ver a spec do agente autônomo em `docs/superpowers/specs/`.
 
 ## Smoke test manual (fazer com credenciais reais)
 Após preencher `.env` e rodar `npm run bling:auth`, valide de ponta a ponta:
