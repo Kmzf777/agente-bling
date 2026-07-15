@@ -21,6 +21,10 @@ export function iniciar() {
       model, systemPrompt: montarSystemPrompt(), mensagens: mensagens as any,
       deps, maxSteps: cfg.agentMaxSteps,
     }),
+    runAgentStream: ({ mensagens, onEvent }) => runAgent({
+      model, systemPrompt: montarSystemPrompt(), mensagens: mensagens as any,
+      deps, maxSteps: cfg.agentMaxSteps, onEvent,
+    }),
   });
   app.listen(cfg.port, () => console.log(`Agente Bling Café rodando em http://localhost:${cfg.port}`));
 }

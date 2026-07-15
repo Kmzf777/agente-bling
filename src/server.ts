@@ -5,6 +5,7 @@ import type { AppConfig } from "./config";
 
 export interface ServerDeps {
   runAgent: (args: { mensagens: unknown[] }) => Promise<{ texto: string }>;
+  runAgentStream?: (args: { mensagens: unknown[]; onEvent: (ev: unknown) => void }) => Promise<{ texto: string }>;
 }
 
 export function criarApp(cfg: AppConfig, deps: ServerDeps): Express {
@@ -41,6 +42,28 @@ export function criarApp(cfg: AppConfig, deps: ServerDeps): Express {
     } catch (e) {
       console.error("Erro em /api/chat:", e);
       res.status(500).json({ erro: "falha ao processar a mensagem" });
+    }
+  });
+
+  // Streaming (SSE): emite eventos de tool-call e de texto conforme o agente trabalha,
+  // e um evento final { tipo: "fim", texto }. A UI mostra a timeline + a resposta.
+  app.post("/api/chat/stream", exigirAuth, async (req, res) => {
+    const mensagens = req.body?.mensagens ?? [];
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders?.();
+    const enviar = (ev: unknown) => res.write(`data: ${JSON.stringify(ev)}\n\n`);
+    try {
+      const stream = deps.runAgentStream
+        ?? (async (a: { mensagens: unknown[]; onEvent: (ev: unknown) => void }) => deps.runAgent({ mensagens: a.mensagens }));
+      const { texto } = await stream({ mensagens, onEvent: enviar });
+      enviar({ tipo: "fim", texto });
+      res.end();
+    } catch (e) {
+      console.error("Erro em /api/chat/stream:", e);
+      enviar({ tipo: "erro", erro: "falha ao processar a mensagem" });
+      res.end();
     }
   });
 
