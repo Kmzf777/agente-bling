@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { toolDefinitions, executarTool } from "../src/agent/tools";
 
 const REF = new Date("2026-07-08T12:00:00-03:00");
-const client = { getAllPages: async () => [{ total: 10 }] } as any;
+const client = { getAllPages: async () => ({ itens: [{ total: 10 }], truncado: false }) } as any;
 
 describe("registro de ferramentas", () => {
   it("expõe as 9 ferramentas no formato OpenAI", () => {

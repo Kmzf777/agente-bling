@@ -3,11 +3,11 @@ import { consultarEstoque } from "../src/tools/consultarEstoque";
 
 const client = {
   getAllPages: async (path: string) => {
-    if (path === "/produtos") return [
+    if (path === "/produtos") return { itens: [
       { id: 1, nome: "Café Torrado 250g", codigo: "CT250", estoque: { saldoVirtualTotal: 8, minimo: 20 } },
       { id: 2, nome: "Café Moído 500g", codigo: "CM500", estoque: { saldoVirtualTotal: 40, minimo: 5 } },
-    ];
-    return [];
+    ], truncado: false };
+    return { itens: [], truncado: false };
   },
 } as any;
 

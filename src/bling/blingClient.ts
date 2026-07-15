@@ -48,15 +48,17 @@ export class BlingClient {
     if (!res.ok) throw new Error(`Bling GET ${path} falhou (HTTP ${res.status})`);
     return (await res.json()) as T;
   }
+  // Retorna { itens, truncado }. truncado=true quando batemos maxPaginas com todas as
+  // páginas cheias (provavelmente há mais dados) — nunca cortamos silenciosamente.
   async getAllPages<T = any>(path: string, query: Record<string, unknown> = {},
-    { limite = 100, maxPaginas = 20 } = {}): Promise<T[]> {
-    const out: T[] = [];
+    { limite = 100, maxPaginas = 50 } = {}): Promise<{ itens: T[]; truncado: boolean }> {
+    const itens: T[] = [];
     for (let pagina = 1; pagina <= maxPaginas; pagina++) {
       const resp = await this.get<{ data: T[] }>(path, { ...query, pagina, limite });
       const data = resp.data ?? [];
-      out.push(...data);
-      if (data.length < limite) break;
+      itens.push(...data);
+      if (data.length < limite) return { itens, truncado: false };
     }
-    return out;
+    return { itens, truncado: true };
   }
 }

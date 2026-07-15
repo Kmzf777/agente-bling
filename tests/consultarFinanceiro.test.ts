@@ -4,12 +4,12 @@ import { consultarFinanceiro } from "../src/tools/consultarFinanceiro";
 const REF = new Date("2026-07-08T12:00:00-03:00");
 const client = {
   getAllPages: async (path: string) => {
-    if (path === "/contas/receber") return [
+    if (path === "/contas/receber") return { itens: [
       { valor: 100, vencimento: "2026-07-05", contato: { nome: "Cliente A" } },
       { valor: 200, vencimento: "2026-08-01", contato: { nome: "Cliente B" } },
-    ];
-    if (path === "/contas/pagar") return [{ valor: 50, vencimento: "2026-07-03", contato: { id: 9 } }];
-    return [];
+    ], truncado: false };
+    if (path === "/contas/pagar") return { itens: [{ valor: 50, vencimento: "2026-07-03", contato: { id: 9 } }], truncado: false };
+    return { itens: [], truncado: false };
   },
 } as any;
 

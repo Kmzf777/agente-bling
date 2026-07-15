@@ -3,11 +3,11 @@ import { consultarCatalogo } from "../src/tools/consultarCatalogo";
 
 const client = {
   getAllPages: async (path: string) => {
-    if (path === "/produtos") return [
+    if (path === "/produtos") return { itens: [
       { id: 1, nome: "Café Caro", codigo: "A", preco: 100, precoCusto: 40, estoque: { saldoVirtualTotal: 5 } },
       { id: 2, nome: "Café Barato", codigo: "B", preco: 10, precoCusto: 4, estoque: { saldoVirtualTotal: 50 } },
-    ];
-    return [];
+    ], truncado: false };
+    return { itens: [], truncado: false };
   },
 } as any;
 

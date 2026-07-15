@@ -9,7 +9,7 @@ function normaliza(s: string) { return s.normalize("NFD").replace(/[̀-ͯ]/g, ""
 
 export async function consultarPedidos(deps: PedidosDeps, args: PedidosArgs) {
   const periodo = resolverPeriodo(args.periodo ?? "este_mes", deps.hoje ?? new Date(), args.dataInicial, args.dataFinal);
-  const pedidos = await listarPedidosVenda(deps.client, periodo);
+  const { itens: pedidos } = await listarPedidosVenda(deps.client, periodo);
 
   if (args.modo === "detalhe") {
     const alvo = pedidos.find((p) => String(p.numero) === String(args.numero));

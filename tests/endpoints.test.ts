@@ -5,7 +5,7 @@ function fakeClient(pages: any[]) {
   const calls: any[] = [];
   return {
     calls,
-    client: { getAllPages: async (path: string, query: any) => { calls.push({ path, query }); return pages; } } as any,
+    client: { getAllPages: async (path: string, query: any) => { calls.push({ path, query }); return { itens: pages, truncado: false }; } } as any,
   };
 }
 
@@ -15,7 +15,7 @@ describe("endpoints", () => {
     const r = await listarPedidosVenda(client, { dataInicial: "2026-07-01", dataFinal: "2026-07-08" });
     expect(calls[0].path).toBe("/pedidos/vendas");
     expect(calls[0].query.dataInicial).toBe("2026-07-01");
-    expect(r).toHaveLength(1);
+    expect(r.itens).toHaveLength(1);
   });
   it("listarOrdensProducao aceita filtro opcional", async () => {
     const { client, calls } = fakeClient([]);

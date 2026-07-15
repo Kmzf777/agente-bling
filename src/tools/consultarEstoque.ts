@@ -7,7 +7,7 @@ export interface EstoqueArgs { filtro: "abaixo_minimo" | "todos" | "busca"; term
 function normaliza(s: string) { return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
 
 export async function consultarEstoque(deps: EstoqueDeps, args: EstoqueArgs) {
-  const produtos = await listarProdutos(deps.client);
+  const { itens: produtos } = await listarProdutos(deps.client);
   let itens = produtos.map((p) => ({
     id: p.id, nome: p.nome, codigo: p.codigo,
     saldo: Number(p.estoque?.saldoVirtualTotal) || 0,

@@ -6,7 +6,7 @@ export interface FatDeps { client: BlingClient; hoje?: Date; situacoesFaturado: 
 export interface FatArgs { periodo: Periodo; dataInicial?: string; dataFinal?: string; comparar_anterior?: boolean; }
 
 async function somaPeriodo(client: BlingClient, sit: number[], p: { dataInicial: string; dataFinal: string }) {
-  const pedidos = await listarPedidosVenda(client, { ...p, situacoes: sit });
+  const { itens: pedidos } = await listarPedidosVenda(client, { ...p, situacoes: sit });
   const total = pedidos.reduce((s, x) => s + (Number(x.total) || 0), 0);
   return { total: Math.round(total * 100) / 100, numeroPedidos: pedidos.length };
 }

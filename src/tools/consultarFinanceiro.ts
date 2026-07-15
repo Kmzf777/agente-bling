@@ -6,7 +6,7 @@ export interface FinanceiroDeps { client: BlingClient; hoje?: Date; }
 export interface FinanceiroArgs { tipo: "a_receber" | "a_pagar"; periodo?: Periodo; dataInicial?: string; dataFinal?: string; }
 
 export async function consultarFinanceiro(deps: FinanceiroDeps, args: FinanceiroArgs) {
-  const contas = args.tipo === "a_receber"
+  const { itens: contas } = args.tipo === "a_receber"
     ? await listarContasReceber(deps.client)
     : await listarContasPagar(deps.client);
   let filtradas = contas;

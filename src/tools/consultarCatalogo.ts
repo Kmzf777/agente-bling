@@ -7,7 +7,7 @@ export interface CatalogoArgs { modo: "contagem" | "busca" | "mais_caros" | "mai
 function normaliza(s: string) { return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
 
 export async function consultarCatalogo(deps: CatalogoDeps, args: CatalogoArgs) {
-  const produtos = (await listarProdutos(deps.client)).map((p) => ({
+  const produtos = (await listarProdutos(deps.client)).itens.map((p) => ({
     id: p.id, nome: p.nome, codigo: p.codigo,
     preco: Number(p.preco) || 0, precoCusto: Number(p.precoCusto) || 0,
     saldo: Number(p.estoque?.saldoVirtualTotal) || 0,

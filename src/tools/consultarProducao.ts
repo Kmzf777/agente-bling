@@ -7,7 +7,7 @@ export interface ProducaoArgs { periodo: Periodo; situacao?: "abertas" | "conclu
 
 export async function consultarProducao(deps: ProducaoDeps, args: ProducaoArgs) {
   const periodo = resolverPeriodo(args.periodo, deps.hoje ?? new Date(), args.dataInicial, args.dataFinal);
-  let ordens = await listarOrdensProducao(deps.client, periodo);
+  let { itens: ordens } = await listarOrdensProducao(deps.client, periodo);
   const sit = args.situacao ?? "todas";
   if (sit !== "todas") {
     const alvo = sit === "abertas" ? "aberta" : "concluida";

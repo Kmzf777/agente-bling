@@ -4,10 +4,10 @@ import { gerarRelatorioDiario } from "../src/tools/relatorioDiario";
 const REF = new Date("2026-07-08T12:00:00-03:00");
 const client = {
   getAllPages: async (path: string) => {
-    if (path === "/pedidos/vendas") return [{ total: 100 }];
-    if (path === "/produtos") return [{ id: 1, nome: "Café", codigo: "C", estoque: { saldoVirtualTotal: 2, minimo: 10 } }];
-    if (path === "/ordens-producao") return [{ id: 1, quantidade: 30, situacao: "concluida" }];
-    return [];
+    if (path === "/pedidos/vendas") return { itens: [{ total: 100 }], truncado: false };
+    if (path === "/produtos") return { itens: [{ id: 1, nome: "Café", codigo: "C", estoque: { saldoVirtualTotal: 2, minimo: 10 } }], truncado: false };
+    if (path === "/ordens-producao") return { itens: [{ id: 1, quantidade: 30, situacao: "concluida" }], truncado: false };
+    return { itens: [], truncado: false };
   },
 } as any;
 
@@ -24,8 +24,8 @@ describe("gerarRelatorioDiario", () => {
     const clienteRuim = {
       getAllPages: async (path: string) => {
         if (path === "/produtos") throw new Error("Bling GET /produtos falhou (HTTP 400)");
-        if (path === "/pedidos/vendas") return [{ total: 50 }];
-        return [];
+        if (path === "/pedidos/vendas") return { itens: [{ total: 50 }], truncado: false };
+        return { itens: [], truncado: false };
       },
     } as any;
     const r = await gerarRelatorioDiario({ client: clienteRuim, hoje: REF, situacoesFaturado: [] }, { data: "hoje" });

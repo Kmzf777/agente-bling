@@ -4,16 +4,16 @@ import { consultarClientes } from "../src/tools/consultarClientes";
 const REF = new Date("2026-07-08T12:00:00-03:00");
 const client = {
   getAllPages: async (path: string) => {
-    if (path === "/contatos") return [
+    if (path === "/contatos") return { itens: [
       { id: 1, nome: "Alessandro Garla", numeroDocumento: "111", telefone: "(14) 9999" },
       { id: 2, nome: "João Alves", numeroDocumento: "222", telefone: "(99) 8888" },
-    ];
-    if (path === "/pedidos/vendas") return [
+    ], truncado: false };
+    if (path === "/pedidos/vendas") return { itens: [
       { total: 100, contato: { id: 1, nome: "Alessandro Garla" } },
       { total: 300, contato: { id: 2, nome: "João Alves" } },
       { total: 50, contato: { id: 1, nome: "Alessandro Garla" } },
-    ];
-    return [];
+    ], truncado: false };
+    return { itens: [], truncado: false };
   },
 } as any;
 

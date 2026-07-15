@@ -4,11 +4,11 @@ import { consultarPedidos } from "../src/tools/consultarPedidos";
 const REF = new Date("2026-07-08T12:00:00-03:00");
 const client = {
   getAllPages: async (path: string) => {
-    if (path === "/pedidos/vendas") return [
+    if (path === "/pedidos/vendas") return { itens: [
       { id: 10, numero: 100, data: "2026-07-02", total: 500, contato: { nome: "UBERMED" } },
       { id: 11, numero: 101, data: "2026-07-03", total: 1200, contato: { nome: "Padaria X" } },
-    ];
-    return [];
+    ], truncado: false };
+    return { itens: [], truncado: false };
   },
   get: async (path: string) => {
     if (path === "/pedidos/vendas/11") return { data: { numero: 101, data: "2026-07-03", total: 1200, contato: { nome: "Padaria X" }, itens: [{ descricao: "Café 1kg", quantidade: 3, valor: 70 }] } };
