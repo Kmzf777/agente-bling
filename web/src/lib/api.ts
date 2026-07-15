@@ -103,6 +103,79 @@ export async function enviarChat(mensagens: Mensagem[]): Promise<string> {
   return dados.texto ?? "";
 }
 
+/** Eventos emitidos pelo backend no stream SSE (/api/chat/stream). */
+export type EventoChat =
+  | { tipo: "tool"; nome: string }
+  | { tipo: "texto"; delta: string }
+  | { tipo: "fim"; texto: string }
+  | { tipo: "erro"; erro: string };
+
+export type CallbacksStream = {
+  onTool?: (nome: string) => void;
+  onDelta?: (delta: string) => void;
+  onFim?: (textoFinal: string) => void;
+};
+
+/**
+ * Envia a conversa e consome a resposta em STREAM (SSE): dispara `onTool` a cada
+ * ferramenta que o agente aciona, `onDelta` a cada pedaço de texto, e `onFim` com o
+ * texto final. Deixa o usuário VER o agente trabalhando (timeline de consultas).
+ *
+ * @throws {NaoAutenticado} em 401. @throws {Error} para falhas de servidor/rede.
+ */
+export async function enviarChatStream(mensagens: Mensagem[], cbs: CallbacksStream): Promise<void> {
+  let resp: Response;
+  try {
+    resp = await fetch(`${API_BASE}/api/chat/stream`, {
+      method: "POST",
+      headers: montarHeaders(),
+      body: JSON.stringify({ mensagens }),
+    });
+  } catch {
+    throw new Error("Não foi possível conectar ao servidor. Verifique sua conexão.");
+  }
+
+  if (resp.status === 401) throw new NaoAutenticado();
+  if (!resp.ok || !resp.body) {
+    const erro = await lerErro(resp);
+    throw new Error(erro ?? `Erro no servidor (HTTP ${resp.status}).`);
+  }
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let textoFinal = "";
+  let fimVisto = false;
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    let sep: number;
+    while ((sep = buffer.indexOf("\n\n")) >= 0) {
+      const bloco = buffer.slice(0, sep);
+      buffer = buffer.slice(sep + 2);
+      const payload = bloco.replace(/^data:\s?/, "").trim();
+      if (!payload) continue;
+
+      let ev: EventoChat;
+      try {
+        ev = JSON.parse(payload) as EventoChat;
+      } catch {
+        continue;
+      }
+
+      if (ev.tipo === "tool") cbs.onTool?.(ev.nome);
+      else if (ev.tipo === "texto") { textoFinal += ev.delta; cbs.onDelta?.(ev.delta); }
+      else if (ev.tipo === "fim") { fimVisto = true; textoFinal = ev.texto || textoFinal; cbs.onFim?.(textoFinal); }
+      else if (ev.tipo === "erro") throw new Error(ev.erro || "Falha ao processar a mensagem.");
+    }
+  }
+
+  if (!fimVisto) cbs.onFim?.(textoFinal);
+}
+
 /** Extrai `{ erro }` do corpo de uma resposta de falha, se houver. */
 async function lerErro(resp: Response): Promise<string | null> {
   try {

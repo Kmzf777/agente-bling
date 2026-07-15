@@ -9,24 +9,50 @@ import {
   AlertTriangle,
   ArrowUp,
   Coffee,
+  Database,
   FileText,
+  Flame,
   LogOut,
   Package,
+  Receipt,
+  ShoppingBag,
   Sparkles,
+  Tag,
   TrendingUp,
+  Users,
+  Wallet,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { enviarChat, logout, NaoAutenticado, type Mensagem } from "@/lib/api";
+import { enviarChatStream, logout, NaoAutenticado, type Mensagem } from "@/lib/api";
 import { renderMarkdownLeve } from "@/lib/markdown";
 
 const RELATORIO_DE_HOJE = "Gere o relatório de hoje";
 
 /** Item da conversa exibido na UI. `erro` marca bolhas de falha (fora do histórico da API). */
 type ItemConversa = Mensagem & { id: number; erro?: boolean };
+
+/** Estado do agente respondendo ao vivo: ferramentas acionadas + texto parcial. */
+type EstadoStream = { conteudo: string; ferramentas: string[] };
+
+/** Mapeia cada ferramenta do agente a um ícone + rótulo amigável para a timeline ao vivo. */
+const TOOL_INFO: Record<string, { icone: typeof TrendingUp; rotulo: string }> = {
+  consultar_vendas: { icone: TrendingUp, rotulo: "Analisando vendas" },
+  consultar_faturamento: { icone: TrendingUp, rotulo: "Somando o faturamento" },
+  consultar_notas_fiscais: { icone: Receipt, rotulo: "Lendo notas fiscais (CFOP)" },
+  consultar_financeiro: { icone: Wallet, rotulo: "Conferindo o financeiro" },
+  consultar_estoque: { icone: Package, rotulo: "Checando o estoque" },
+  consultar_producao: { icone: Flame, rotulo: "Vendo a produção" },
+  consultar_catalogo: { icone: Tag, rotulo: "Consultando o catálogo" },
+  consultar_clientes: { icone: Users, rotulo: "Buscando clientes" },
+  consultar_pedidos: { icone: ShoppingBag, rotulo: "Abrindo pedidos" },
+  gerar_relatorio_diario: { icone: FileText, rotulo: "Montando o relatório" },
+  bling_consultar_api: { icone: Database, rotulo: "Consultando o Bling" },
+};
+const TOOL_FALLBACK = { icone: Coffee, rotulo: "Consultando o Bling" };
 
 type ChatProps = {
   onLogout: () => void;
@@ -46,15 +72,16 @@ export function Chat({ onLogout }: ChatProps) {
   const [itens, setItens] = useState<ItemConversa[]>([]);
   const [rascunho, setRascunho] = useState("");
   const [pensando, setPensando] = useState(false);
+  const [stream, setStream] = useState<EstadoStream | null>(null);
 
   const fimRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll para a mensagem mais recente (e enquanto "pensa"). O sentinela
-  // no fim do conteúdo é revelado dentro do viewport rolável do ScrollArea.
+  // Auto-scroll para a mensagem mais recente (e enquanto o agente responde ao vivo).
+  // O sentinela no fim do conteúdo é revelado dentro do viewport rolável do ScrollArea.
   useLayoutEffect(() => {
     fimRef.current?.scrollIntoView({ block: "end" });
-  }, [itens, pensando]);
+  }, [itens, pensando, stream]);
 
   const enviar = useCallback(
     async (texto: string) => {
@@ -70,12 +97,24 @@ export function Chat({ onLogout }: ChatProps) {
       setItens((prev) => [...prev, { id: novoId(), role: "user", content: limpo }]);
       setRascunho("");
       setPensando(true);
+      setStream({ conteudo: "", ferramentas: [] });
 
+      let acumulado = "";
       try {
-        const resposta = await enviarChat(historicoApi);
+        await enviarChatStream(historicoApi, {
+          onTool: (nome) =>
+            setStream((s) => (s ? { ...s, ferramentas: [...s.ferramentas, nome] } : s)),
+          onDelta: (delta) => {
+            acumulado += delta;
+            setStream((s) => (s ? { ...s, conteudo: acumulado } : s));
+          },
+          onFim: (textoFinal) => {
+            acumulado = textoFinal || acumulado;
+          },
+        });
         setItens((prev) => [
           ...prev,
-          { id: novoId(), role: "assistant", content: resposta },
+          { id: novoId(), role: "assistant", content: acumulado || "Sem resposta." },
         ]);
       } catch (err) {
         if (err instanceof NaoAutenticado) {
@@ -91,6 +130,7 @@ export function Chat({ onLogout }: ChatProps) {
           { id: novoId(), role: "assistant", content: msg, erro: true },
         ]);
       } finally {
+        setStream(null);
         setPensando(false);
         // Devolve o foco ao campo para manter o fluxo de conversa.
         textareaRef.current?.focus();
@@ -130,7 +170,7 @@ export function Chat({ onLogout }: ChatProps) {
               {itens.map((item) => (
                 <Bolha key={item.id} item={item} />
               ))}
-              {pensando && <Pensando />}
+              {stream && <AgenteAoVivo estado={stream} />}
             </ol>
           )}
           {/* Sentinela para o auto-scroll. */}
@@ -270,20 +310,69 @@ function Bolha({ item }: { item: ItemConversa }) {
   );
 }
 
-function Pensando() {
+/**
+ * Agente respondendo AO VIVO: mostra a timeline de ferramentas acionadas (cada consulta
+ * ao Bling com ícone + rótulo) e o texto conforme ele é transmitido — o usuário vê o
+ * agente trabalhando, em vez de só um "pensando…" opaco.
+ */
+function AgenteAoVivo({ estado }: { estado: EstadoStream }) {
+  const temTexto = estado.conteudo.length > 0;
+  const semNada = !temTexto && estado.ferramentas.length === 0;
+
   return (
-    <li className="flex justify-start">
+    <li className="animate-pour flex justify-start">
       <div className="flex max-w-[90%] gap-3">
         <div className="mt-0.5 grid size-7 shrink-0 place-items-center self-start rounded-lg bg-gradient-to-b from-primary/20 to-primary/5 ring-1 ring-primary/20">
           <Coffee className="size-3.5 text-primary" strokeWidth={2} />
         </div>
-        <div className="flex items-center gap-2.5 rounded-2xl rounded-tl-md bg-card px-4 py-3 ring-1 ring-border/70">
-          <div className="flex items-end gap-1">
-            <Ponto atraso="0ms" />
-            <Ponto atraso="180ms" />
-            <Ponto atraso="360ms" />
-          </div>
-          <span className="text-sm text-muted-foreground">pensando…</span>
+        <div className="flex min-w-0 flex-col gap-2">
+          {estado.ferramentas.length > 0 && (
+            <ul className="flex flex-col gap-1.5">
+              {estado.ferramentas.map((nome, i) => {
+                const info = TOOL_INFO[nome] ?? TOOL_FALLBACK;
+                const Icone = info.icone;
+                const ativo = !temTexto && i === estado.ferramentas.length - 1;
+                return (
+                  <li
+                    key={i}
+                    className="animate-pour flex items-center gap-2 text-xs"
+                    style={{ animationDelay: `${i * 40}ms` }}
+                  >
+                    <span className="grid size-5 shrink-0 place-items-center rounded-md bg-primary/10 ring-1 ring-primary/15">
+                      <Icone className="size-3 text-primary" strokeWidth={2} />
+                    </span>
+                    <span className={cn(ativo ? "text-foreground" : "text-muted-foreground")}>
+                      {info.rotulo}…
+                    </span>
+                    {ativo && (
+                      <span className="ml-0.5 flex items-end gap-0.5">
+                        <Ponto atraso="0ms" />
+                        <Ponto atraso="180ms" />
+                        <Ponto atraso="360ms" />
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {temTexto ? (
+            <div className="min-w-0 rounded-2xl rounded-tl-md bg-card px-4 py-3 text-[0.95rem] text-card-foreground ring-1 ring-border/70">
+              {renderMarkdownLeve(estado.conteudo)}
+            </div>
+          ) : (
+            semNada && (
+              <div className="flex items-center gap-2.5 rounded-2xl rounded-tl-md bg-card px-4 py-3 ring-1 ring-border/70">
+                <div className="flex items-end gap-1">
+                  <Ponto atraso="0ms" />
+                  <Ponto atraso="180ms" />
+                  <Ponto atraso="360ms" />
+                </div>
+                <span className="text-sm text-muted-foreground">pensando…</span>
+              </div>
+            )
+          )}
         </div>
       </div>
     </li>
