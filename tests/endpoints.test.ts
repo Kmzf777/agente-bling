@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { listarPedidosVenda, listarOrdensProducao, listarContatos, listarContasReceber, listarContasPagar } from "../src/bling/endpoints";
+import { listarPedidosVenda, listarOrdensProducao, listarContatos, listarContasReceber, listarContasPagar, listarNotasFiscais } from "../src/bling/endpoints";
 
 function fakeClient(pages: any[]) {
   const calls: any[] = [];
@@ -21,6 +21,20 @@ describe("endpoints", () => {
     const { client, calls } = fakeClient([]);
     await listarOrdensProducao(client, { dataInicial: "2026-07-01", dataFinal: "2026-07-08" });
     expect(calls[0].path).toBe("/ordens-producao");
+  });
+  it("listarNotasFiscais consulta /nfe com datas de emissão", async () => {
+    const { client, calls } = fakeClient([{ id: 1 }]);
+    const r = await listarNotasFiscais(client, { dataInicial: "2026-06-01", dataFinal: "2026-06-30" });
+    expect(calls[0].path).toBe("/nfe");
+    expect(calls[0].query.dataEmissaoInicial).toBe("2026-06-01");
+    expect(calls[0].query.dataEmissaoFinal).toBe("2026-06-30");
+    expect(r.itens).toHaveLength(1);
+  });
+  it("listarNotasFiscais repassa tipo e situacoes quando informados", async () => {
+    const { client, calls } = fakeClient([]);
+    await listarNotasFiscais(client, { dataInicial: "2026-06-01", dataFinal: "2026-06-30", tipo: 1, situacoes: [5] });
+    expect(calls[0].query.tipo).toBe(1);
+    expect(calls[0].query["situacoes[]"]).toEqual([5]);
   });
   it("listarContatos / listarContasReceber / listarContasPagar chamam os recursos certos", async () => {
     const { client, calls } = fakeClient([]);
