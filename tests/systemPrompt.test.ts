@@ -20,4 +20,11 @@ describe("montarSystemPrompt", () => {
     expect(s).toMatch(/bling_consultar_api|múltiplos passos|autonom/i);
     expect(s).not.toContain("4 áreas");
   });
+
+  it("não embute a base de conhecimento completa (custo): usa resumo + tool contexto_cafe", () => {
+    const s = montarSystemPrompt(new Date("2026-07-16T12:00:00-03:00"));
+    expect(s).toMatch(/contexto_cafe/);
+    // A base completa (~16k chars) NÃO deve estar embutida — só o resumo.
+    expect(s.length).toBeLessThan(5000);
+  });
 });

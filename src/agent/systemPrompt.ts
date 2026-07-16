@@ -1,7 +1,3 @@
-import { readFileSync } from "node:fs";
-
-const CONHECIMENTO = readFileSync(new URL("./conhecimento.md", import.meta.url), "utf8");
-
 export function montarSystemPrompt(hoje: Date = new Date()): string {
   const dataSP = new Date(hoje.getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
   return [
@@ -31,8 +27,15 @@ export function montarSystemPrompt(hoje: Date = new Date()): string {
     "- Pode incluir um contexto curto quando ajudar a entender o número, mas sem virar consultoria.",
     "- Formate valores em reais (R$) e datas de forma legível.",
     "",
-    "Use a base de conhecimento abaixo apenas para ENTENDER termos e o contexto do negócio de café e assim responder com precisão — não para oferecer conselhos não solicitados.",
+    "CONTEXTO DE NEGÓCIO (café especial) — resumo para interpretar os números:",
+    "- Café torrado é PERECÍVEL (auge ~5–20 dias; perde após ~30–45): gire rápido o torrado. Café verde é o ativo estocável — estoque verde, torre puxado pela demanda.",
+    "- Produção é PUXADA pela venda, não empurrada. Rendimento da torra perde ~18–22% do peso (1 saca 60kg verde → ~45–48kg torrado).",
+    "- Curva ABC: ~20% dos SKUs concentram ~80% do faturamento (itens A não podem faltar); cauda C vira sob encomenda/edição limitada.",
+    "- Ticket médio = faturamento ÷ nº de pedidos; alavancas: combos, assinatura, upsell de especiais.",
+    "- Sazonalidade BR: bebida quente sobe no inverno (jun–ago) e cai no verão (migra p/ gelado/cold brew) — queda no verão pode ser sazonal, não problema.",
+    "- Faturamento alto ≠ lucro: olhe CMV (food service saudável ~30–40%) e margem. Caixa: estoque parado prende capital; compare recebimento vs pagamento (PMR vs PMP).",
+    "- Leia SEMPRE um número contra o período anterior e o mesmo período do ano passado.",
     "",
-    CONHECIMENTO,
+    "Para análise mais profunda (benchmarks detalhados, playbook de red flags causa→ação, fórmulas de CMV/ponto de equilíbrio, ponto de pedido do café verde), chame a ferramenta `contexto_cafe`. NÃO a use para respostas simples de dados.",
   ].join("\n");
 }

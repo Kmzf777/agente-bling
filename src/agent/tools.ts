@@ -12,6 +12,7 @@ import { consultarFinanceiro } from "../tools/consultarFinanceiro";
 import { consultarPedidos } from "../tools/consultarPedidos";
 import { consultarNotasFiscais } from "../tools/consultarNotasFiscais";
 import { consultarApi } from "../tools/consultarApi";
+import { CONHECIMENTO_CAFE } from "./conhecimento";
 
 export interface ToolDeps { client: BlingClient; situacoesFaturado: number[]; hoje?: Date; }
 
@@ -89,6 +90,11 @@ export function construirTools(deps: ToolDeps) {
       description: "Escape hatch: consulta QUALQUER endpoint de LEITURA da API v3 do Bling que as outras tools não cobrem (ex.: '/nfe', '/contas/pagar', '/depositos'). Aceita params e paginação. Somente leitura.",
       inputSchema: z.object({ path: z.string(), params: z.record(z.any()).optional(), todasPaginas: z.boolean().optional(), maxPaginas: z.number().optional() }),
       execute: async (a) => consultarApi({ client: deps.client }, a as any),
+    }),
+    contexto_cafe: tool({
+      description: "Base de conhecimento de gestão de café especial (benchmarks de mercado, playbook de red flags causa→ação, fórmulas de CMV/margem/ponto de equilíbrio, gestão de café verde vs torrado). Chame SÓ quando precisar de análise ou recomendação aprofundada — NUNCA para respostas simples de dados.",
+      inputSchema: z.object({}),
+      execute: async () => ({ conhecimento: CONHECIMENTO_CAFE }),
     }),
   };
 }

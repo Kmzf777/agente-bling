@@ -17,6 +17,7 @@ describe("construirTools (AI SDK)", () => {
       "consultar_pedidos",
       "consultar_producao",
       "consultar_vendas",
+      "contexto_cafe",
       "gerar_relatorio_diario",
     ]);
     for (const t of Object.values(tools) as any[]) {
@@ -42,5 +43,12 @@ describe("construirTools (AI SDK)", () => {
     const r = await tools.consultar_notas_fiscais.execute({ periodo: "mes_passado" });
     expect(r.totalVenda).toBe(100);
     expect(r.totalBonificacao).toBe(20);
+  });
+
+  it("a tool contexto_cafe devolve a base de conhecimento completa sob demanda", async () => {
+    const tools: any = construirTools({ client: {} as any, situacoesFaturado: [], hoje: REF });
+    const r = await tools.contexto_cafe.execute({});
+    expect(typeof r.conhecimento).toBe("string");
+    expect(r.conhecimento.toLowerCase()).toContain("perecível");
   });
 });
