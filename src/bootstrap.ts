@@ -19,11 +19,11 @@ export function iniciar() {
   const app = criarApp(cfg, {
     runAgent: ({ mensagens }) => runAgent({
       model, systemPrompt: montarSystemPrompt(), mensagens: mensagens as any,
-      deps, maxSteps: cfg.agentMaxSteps,
+      deps, maxSteps: cfg.agentMaxSteps, usdBrl: cfg.usdBrl,
     }),
     runAgentStream: ({ mensagens, onEvent }) => runAgent({
       model, systemPrompt: montarSystemPrompt(), mensagens: mensagens as any,
-      deps, maxSteps: cfg.agentMaxSteps, onEvent,
+      deps, maxSteps: cfg.agentMaxSteps, usdBrl: cfg.usdBrl, onEvent,
     }),
   });
   app.listen(cfg.port, () => console.log(`Agente Bling Café rodando em http://localhost:${cfg.port}`));

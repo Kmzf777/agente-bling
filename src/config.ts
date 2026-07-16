@@ -13,6 +13,7 @@ export interface AppConfig {
   agentModel: string;
   anthropicApiKey: string;
   agentMaxSteps: number;
+  usdBrl: number;
 }
 
 const REQUIRED = ["ANTHROPIC_API_KEY", "BLING_CLIENT_ID", "BLING_CLIENT_SECRET", "APP_PASSWORD", "SESSION_SECRET"] as const;
@@ -36,5 +37,6 @@ export function loadConfig(env: NodeJS.ProcessEnv | Record<string, string | unde
     agentModel: env.AGENT_MODEL || "claude-sonnet-4-6",
     anthropicApiKey: env.ANTHROPIC_API_KEY || "",
     agentMaxSteps: Number(env.AGENT_MAX_STEPS || 20),
+    usdBrl: Number(env.USD_BRL || 5.6),
   };
 }

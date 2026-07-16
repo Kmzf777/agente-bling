@@ -58,4 +58,25 @@ describe("runAgent (AI SDK)", () => {
     expect(Object.keys(captured.tools)).toContain("consultar_notas_fiscais");
     expect(captured.stopWhen).toBeTruthy();
   });
+
+  it("emite evento de custo a partir do usage (com cache read/write)", async () => {
+    const streamTextImpl: any = () => ({
+      text: Promise.resolve("ok"),
+      fullStream: undefined,
+      totalUsage: Promise.resolve({ inputTokens: 1000, outputTokens: 500, cachedInputTokens: 2000 }),
+      steps: Promise.resolve([{ providerMetadata: { anthropic: { cacheCreationInputTokens: 4000 } } }]),
+    });
+    const eventos: any[] = [];
+    await runAgent({
+      model: {} as any, systemPrompt: "s", mensagens: [{ role: "user", content: "x" }],
+      deps: depsBase, usdBrl: 5, onEvent: (e) => eventos.push(e), streamTextImpl,
+    });
+    const custo = eventos.find((e) => e.tipo === "custo");
+    expect(custo).toBeTruthy();
+    // (1000*3 + 500*15 + 2000*0.30 + 4000*3.75)/1e6 = 26100/1e6 = 0.0261
+    expect(custo.usd).toBeCloseTo(0.0261, 6);
+    expect(custo.brl).toBeCloseTo(0.1305, 6);
+    expect(custo.cacheRead).toBe(2000);
+    expect(custo.cacheWrite).toBe(4000);
+  });
 });

@@ -1,12 +1,14 @@
 import { streamText, stepCountIs, type LanguageModel } from "ai";
 import { construirTools, type ToolDeps } from "./tools";
 import { resumirResultado } from "./resumo";
+import { calcularCusto } from "./custo";
 
 export interface Mensagem { role: "user" | "assistant"; content: any; }
 export type AgentEvent =
   | { tipo: "tool_inicio"; id: string; nome: string; args: unknown }
   | { tipo: "tool_fim"; id: string; resumo: string }
-  | { tipo: "texto"; delta: string };
+  | { tipo: "texto"; delta: string }
+  | { tipo: "custo"; usd: number; brl: number; entrada: number; saida: number; cacheRead: number; cacheWrite: number };
 
 export interface RunAgentParams {
   model: LanguageModel;
@@ -14,6 +16,7 @@ export interface RunAgentParams {
   deps: ToolDeps;
   systemPrompt: string;
   maxSteps?: number;
+  usdBrl?: number; // taxa fixa USD→BRL para exibir o custo estimado em reais
   onEvent?: (ev: AgentEvent) => void;
   streamTextImpl?: typeof streamText; // injeção para testes
 }
@@ -51,10 +54,33 @@ export async function runAgent(p: RunAgentParams): Promise<{ texto: string }> {
   }
 
   const texto = (await result.text)?.trim() || "Sem resposta.";
-  // Observabilidade de custo: mostra quanto do input veio do cache (cacheRead alto = barato).
+  // Custo da resposta: usa o usage agregado (entrada/saída/cache-read somados nos passos)
+  // + o cache-write somado dos passos. Emite um evento "custo" para o frontend exibir.
   try {
-    const u: any = await result.usage;
-    if (u) console.log(`[agent] tokens: in=${u.inputTokens ?? "?"} out=${u.outputTokens ?? "?"} cacheRead=${u.cachedInputTokens ?? 0}`);
-  } catch { /* usage é opcional */ }
+    const u: any = (await result.totalUsage) ?? (await result.usage);
+    if (u) {
+      let cacheWrite = 0;
+      try {
+        const steps: any[] = (await result.steps) ?? [];
+        for (const s of steps) cacheWrite += Number(s?.providerMetadata?.anthropic?.cacheCreationInputTokens ?? 0);
+      } catch { /* steps é opcional */ }
+      const custo = calcularCusto({
+        inputTokens: Number(u.inputTokens) || 0,
+        outputTokens: Number(u.outputTokens) || 0,
+        cacheReadTokens: Number(u.cachedInputTokens) || 0,
+        cacheWriteTokens: cacheWrite,
+      });
+      console.log(`[agent] tokens: in=${custo.inputTokens} out=${custo.outputTokens} cacheRead=${custo.cacheReadTokens} cacheWrite=${custo.cacheWriteTokens} → US$ ${custo.usd.toFixed(6)}`);
+      p.onEvent?.({
+        tipo: "custo",
+        usd: custo.usd,
+        brl: Math.round(custo.usd * (p.usdBrl ?? 5.6) * 1e6) / 1e6,
+        entrada: custo.inputTokens,
+        saida: custo.outputTokens,
+        cacheRead: custo.cacheReadTokens,
+        cacheWrite: custo.cacheWriteTokens,
+      });
+    }
+  } catch { /* custo é opcional */ }
   return { texto };
 }

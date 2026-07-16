@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { enviarChatStream, logout, NaoAutenticado, type Mensagem } from "@/lib/api";
+import { enviarChatStream, logout, NaoAutenticado, type Mensagem, type CustoMsg } from "@/lib/api";
 import { renderMarkdownLeve } from "@/lib/markdown";
 import { AtividadeCard } from "@/components/AtividadeCard";
 import { type Passo } from "@/lib/tools";
@@ -28,7 +28,7 @@ import { type Passo } from "@/lib/tools";
 const RELATORIO_DE_HOJE = "Gere o relatório de hoje";
 
 /** Item da conversa exibido na UI. `erro` marca bolhas de falha (fora do histórico da API). */
-type ItemConversa = Mensagem & { id: number; erro?: boolean };
+type ItemConversa = Mensagem & { id: number; erro?: boolean; custo?: CustoMsg };
 
 /** Estado do agente respondendo ao vivo: passos de tool calls + texto parcial. */
 type EstadoStream = {
@@ -79,6 +79,7 @@ export function Chat({ onLogout }: ChatProps) {
       setStream({ conteudo: "", passos: [] });
 
       let acumulado = "";
+      let custoFinal: CustoMsg | undefined;
       try {
         await enviarChatStream(historicoApi, {
           onToolInicio: ({ id, nome, args }) =>
@@ -108,13 +109,16 @@ export function Chat({ onLogout }: ChatProps) {
             acumulado += delta;
             setStream((s) => (s ? { ...s, conteudo: acumulado } : s));
           },
+          onCusto: (c) => {
+            custoFinal = c;
+          },
           onFim: (textoFinal) => {
             acumulado = textoFinal || acumulado;
           },
         });
         setItens((prev) => [
           ...prev,
-          { id: novoId(), role: "assistant", content: acumulado || "Sem resposta." },
+          { id: novoId(), role: "assistant", content: acumulado || "Sem resposta.", custo: custoFinal },
         ]);
       } catch (err) {
         if (err instanceof NaoAutenticado) {
@@ -315,11 +319,39 @@ function Bolha({ item }: { item: ItemConversa }) {
         <div className="mt-0.5 grid size-6 shrink-0 place-items-center self-start rounded-md bg-primary/10 ring-1 ring-primary/15">
           <Bot className="size-3.5 text-primary" strokeWidth={2} aria-hidden />
         </div>
-        <div className="min-w-0 rounded-md rounded-tl-sm border border-border bg-card px-3.5 py-3 text-sm text-card-foreground leading-relaxed">
-          {renderMarkdownLeve(item.content)}
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="min-w-0 rounded-md rounded-tl-sm border border-border bg-card px-3.5 py-3 text-sm text-card-foreground leading-relaxed">
+            {renderMarkdownLeve(item.content)}
+          </div>
+          {item.custo && <CustoLinha custo={item.custo} />}
         </div>
       </div>
     </li>
+  );
+}
+
+/** Abrevia contagens de token: 3200 → "3.2k". */
+function fmtK(n: number): string {
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+}
+
+/**
+ * Linha discreta de custo abaixo da resposta: valor estimado em USD + BRL (Sonnet),
+ * com o detalhe de tokens em mono, apagado — sem competir com a resposta.
+ */
+function CustoLinha({ custo }: { custo: CustoMsg }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 pl-1 font-mono text-[0.7rem] leading-none">
+      <span className="text-muted-foreground">
+        ≈ <span className="text-foreground/80">US$ {custo.usd.toFixed(4)}</span>
+        {" · "}
+        R$ {custo.brl.toFixed(4)}
+      </span>
+      <span className="text-muted-foreground/60">
+        {fmtK(custo.entrada)} in · {fmtK(custo.saida)} out
+        {custo.cacheRead > 0 ? ` · ${fmtK(custo.cacheRead)} cache` : ""}
+      </span>
+    </div>
   );
 }
 

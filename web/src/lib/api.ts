@@ -103,11 +103,22 @@ export async function enviarChat(mensagens: Mensagem[]): Promise<string> {
   return dados.texto ?? "";
 }
 
+/** Custo estimado de uma resposta do agente (Sonnet), em USD + BRL e tokens. */
+export type CustoMsg = {
+  usd: number;
+  brl: number;
+  entrada: number;
+  saida: number;
+  cacheRead: number;
+  cacheWrite: number;
+};
+
 /** Eventos emitidos pelo backend no stream SSE (/api/chat/stream). */
 export type EventoChat =
   | { tipo: "tool_inicio"; id: string; nome: string; args?: Record<string, unknown> }
   | { tipo: "tool_fim"; id: string; resumo: string }
   | { tipo: "texto"; delta: string }
+  | ({ tipo: "custo" } & CustoMsg)
   | { tipo: "fim"; texto: string }
   | { tipo: "erro"; erro: string };
 
@@ -115,6 +126,7 @@ export type CallbacksStream = {
   onToolInicio?: (p: { id: string; nome: string; args?: Record<string, unknown> }) => void;
   onToolFim?: (p: { id: string; resumo: string }) => void;
   onDelta?: (delta: string) => void;
+  onCusto?: (c: CustoMsg) => void;
   onFim?: (textoFinal: string) => void;
 };
 
@@ -175,6 +187,8 @@ export async function enviarChatStream(mensagens: Mensagem[], cbs: CallbacksStre
       } else if (ev.tipo === "texto") {
         textoFinal += ev.delta;
         cbs.onDelta?.(ev.delta);
+      } else if (ev.tipo === "custo") {
+        cbs.onCusto?.({ usd: ev.usd, brl: ev.brl, entrada: ev.entrada, saida: ev.saida, cacheRead: ev.cacheRead, cacheWrite: ev.cacheWrite });
       } else if (ev.tipo === "fim") {
         fimVisto = true;
         textoFinal = ev.texto || textoFinal;
