@@ -349,7 +349,9 @@ function CustoLinha({ custo }: { custo: CustoMsg }) {
       </span>
       <span className="text-muted-foreground/60">
         {fmtK(custo.entrada)} in · {fmtK(custo.saida)} out
-        {custo.cacheRead > 0 ? ` · ${fmtK(custo.cacheRead)} cache` : ""}
+        {custo.cacheRead > 0 || custo.cacheWrite > 0
+          ? ` · cache ${fmtK(custo.cacheRead)}↓ ${fmtK(custo.cacheWrite)}↑`
+          : ""}
       </span>
     </div>
   );
