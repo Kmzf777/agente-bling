@@ -31,7 +31,9 @@ export async function runAgent(p: RunAgentParams): Promise<{ texto: string }> {
   // Prompt caching (Anthropic): cacheia o system — que cobre tools+system e é reenviado a
   // CADA passo do loop — e a última mensagem (prefixo do histórico multi-turn). O trecho
   // repetido passa a custar ~0,1× em vez do preço cheio, cortando o custo de input.
-  const cache = { anthropic: { cacheControl: { type: "ephemeral" as const } } };
+  // ttl 1h: mantém o prefixo (system+tools) quente entre perguntas da mesma sessão,
+  // virando leitura barata (0,1×) em vez de reescrever a cada pergunta.
+  const cache = { anthropic: { cacheControl: { type: "ephemeral" as const, ttl: "1h" as const } } };
   const ultima = p.mensagens.length - 1;
   const mensagens: any[] = [
     { role: "system", content: p.systemPrompt, providerOptions: cache },
