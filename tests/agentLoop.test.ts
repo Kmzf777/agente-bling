@@ -43,8 +43,18 @@ describe("runAgent (AI SDK)", () => {
       mensagens: [{ role: "user", content: "x" }],
       deps: depsBase, maxSteps: 7, streamTextImpl,
     });
-    expect(captured.system).toBe("SYS");
-    expect(captured.messages).toEqual([{ role: "user", content: "x" }]);
+    expect(captured.system).toBeUndefined();
+    expect(captured.allowSystemInMessages).toBe(true);
+    expect(captured.messages[0]).toEqual({
+      role: "system",
+      content: "SYS",
+      providerOptions: { anthropic: { cacheControl: { type: "ephemeral" } } },
+    });
+    expect(captured.messages[1]).toEqual({
+      role: "user",
+      content: "x",
+      providerOptions: { anthropic: { cacheControl: { type: "ephemeral" } } },
+    });
     expect(Object.keys(captured.tools)).toContain("consultar_notas_fiscais");
     expect(captured.stopWhen).toBeTruthy();
   });

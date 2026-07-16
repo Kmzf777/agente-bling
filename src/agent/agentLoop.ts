@@ -25,13 +25,22 @@ export interface RunAgentParams {
  */
 export async function runAgent(p: RunAgentParams): Promise<{ texto: string }> {
   const impl = p.streamTextImpl ?? streamText;
+  // Prompt caching (Anthropic): cacheia o system — que cobre tools+system e é reenviado a
+  // CADA passo do loop — e a última mensagem (prefixo do histórico multi-turn). O trecho
+  // repetido passa a custar ~0,1× em vez do preço cheio, cortando o custo de input.
+  const cache = { anthropic: { cacheControl: { type: "ephemeral" as const } } };
+  const ultima = p.mensagens.length - 1;
+  const mensagens: any[] = [
+    { role: "system", content: p.systemPrompt, providerOptions: cache },
+    ...p.mensagens.map((m, i) => (i === ultima ? { ...m, providerOptions: cache } : m)),
+  ];
   const result: any = await impl({
     model: p.model,
-    system: p.systemPrompt,
-    messages: p.mensagens as any,
+    messages: mensagens,
+    allowSystemInMessages: true,
     tools: construirTools(p.deps),
     stopWhen: stepCountIs(p.maxSteps ?? 20),
-  });
+  } as any);
 
   if (p.onEvent && result.fullStream) {
     for await (const part of result.fullStream) {
@@ -42,5 +51,10 @@ export async function runAgent(p: RunAgentParams): Promise<{ texto: string }> {
   }
 
   const texto = (await result.text)?.trim() || "Sem resposta.";
+  // Observabilidade de custo: mostra quanto do input veio do cache (cacheRead alto = barato).
+  try {
+    const u: any = await result.usage;
+    if (u) console.log(`[agent] tokens: in=${u.inputTokens ?? "?"} out=${u.outputTokens ?? "?"} cacheRead=${u.cachedInputTokens ?? 0}`);
+  } catch { /* usage é opcional */ }
   return { texto };
 }
