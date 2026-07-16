@@ -13,7 +13,7 @@ export function resumirResultado(nome: string, output: any): string {
     case "consultar_faturamento":
       return `${fmtBRL(o.faturamento)}${o.variacaoPercentual != null ? ` (${o.variacaoPercentual}% vs anterior)` : ""}`;
     case "consultar_notas_fiscais":
-      return `${o.totalNotas ?? 0} NF-e · venda ${fmtBRL(o.totalVenda)}${Number(o.totalBonificacao) > 0 ? ` · bonif. ${fmtBRL(o.totalBonificacao)}` : ""}`;
+      return `${o.totalNotas ?? 0} NF-e · venda ${fmtBRL(o.totalVenda)}${Number(o.totalBonificacao) > 0 ? ` · bonif. ${fmtBRL(o.totalBonificacao)}` : ""}${Number(o.totalOutras) > 0 ? ` · outras ${fmtBRL(o.totalOutras)}` : ""}`;
     case "consultar_financeiro":
       return `pago ${fmtBRL(o.totalPago)} · aberto ${fmtBRL(o.totalEmAberto)}`;
     case "consultar_estoque":
