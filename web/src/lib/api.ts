@@ -1,5 +1,5 @@
 /**
- * Cliente de API do "Canastra" — assistente do café.
+ * Cliente de API do agente Bling.
  *
  * O frontend pode estar hospedado em outra origem (ex.: Vercel) e o backend
  * exposto via ngrok/local. Por isso a autenticação é por **token Bearer**
@@ -105,21 +105,23 @@ export async function enviarChat(mensagens: Mensagem[]): Promise<string> {
 
 /** Eventos emitidos pelo backend no stream SSE (/api/chat/stream). */
 export type EventoChat =
-  | { tipo: "tool"; nome: string }
+  | { tipo: "tool_inicio"; id: string; nome: string; args?: Record<string, unknown> }
+  | { tipo: "tool_fim"; id: string; resumo: string }
   | { tipo: "texto"; delta: string }
   | { tipo: "fim"; texto: string }
   | { tipo: "erro"; erro: string };
 
 export type CallbacksStream = {
-  onTool?: (nome: string) => void;
+  onToolInicio?: (p: { id: string; nome: string; args?: Record<string, unknown> }) => void;
+  onToolFim?: (p: { id: string; resumo: string }) => void;
   onDelta?: (delta: string) => void;
   onFim?: (textoFinal: string) => void;
 };
 
 /**
- * Envia a conversa e consome a resposta em STREAM (SSE): dispara `onTool` a cada
- * ferramenta que o agente aciona, `onDelta` a cada pedaço de texto, e `onFim` com o
- * texto final. Deixa o usuário VER o agente trabalhando (timeline de consultas).
+ * Envia a conversa e consome a resposta em STREAM (SSE): dispara `onToolInicio`
+ * quando o agente começa uma ferramenta, `onToolFim` com o resumo do resultado,
+ * `onDelta` a cada pedaço de texto, e `onFim` com o texto final.
  *
  * @throws {NaoAutenticado} em 401. @throws {Error} para falhas de servidor/rede.
  */
@@ -166,10 +168,20 @@ export async function enviarChatStream(mensagens: Mensagem[], cbs: CallbacksStre
         continue;
       }
 
-      if (ev.tipo === "tool") cbs.onTool?.(ev.nome);
-      else if (ev.tipo === "texto") { textoFinal += ev.delta; cbs.onDelta?.(ev.delta); }
-      else if (ev.tipo === "fim") { fimVisto = true; textoFinal = ev.texto || textoFinal; cbs.onFim?.(textoFinal); }
-      else if (ev.tipo === "erro") throw new Error(ev.erro || "Falha ao processar a mensagem.");
+      if (ev.tipo === "tool_inicio") {
+        cbs.onToolInicio?.({ id: ev.id, nome: ev.nome, args: ev.args });
+      } else if (ev.tipo === "tool_fim") {
+        cbs.onToolFim?.({ id: ev.id, resumo: ev.resumo });
+      } else if (ev.tipo === "texto") {
+        textoFinal += ev.delta;
+        cbs.onDelta?.(ev.delta);
+      } else if (ev.tipo === "fim") {
+        fimVisto = true;
+        textoFinal = ev.texto || textoFinal;
+        cbs.onFim?.(textoFinal);
+      } else if (ev.tipo === "erro") {
+        throw new Error((ev as { tipo: "erro"; erro: string }).erro || "Falha ao processar a mensagem.");
+      }
     }
   }
 
