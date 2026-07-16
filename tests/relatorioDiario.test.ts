@@ -6,7 +6,7 @@ const client = {
   getAllPages: async (path: string) => {
     if (path === "/pedidos/vendas") return { itens: [{ total: 100 }], truncado: false };
     if (path === "/produtos") return { itens: [{ id: 1, nome: "Café", codigo: "C", estoque: { saldoVirtualTotal: 2, minimo: 10 } }], truncado: false };
-    if (path === "/ordens-producao") return { itens: [{ id: 1, quantidade: 30, situacao: "concluida" }], truncado: false };
+    if (path === "/pedidos/compras") return { itens: [{ numero: 1, data: "2026-07-08", total: 500, contato: { nome: "Fabrica" } }], truncado: false };
     return { itens: [], truncado: false };
   },
 } as any;
@@ -16,7 +16,7 @@ describe("gerarRelatorioDiario", () => {
     const r = await gerarRelatorioDiario({ client, hoje: REF, situacoesFaturado: [9] }, { data: "hoje" });
     expect((r.vendas as any).numeroPedidos).toBe(1);
     expect((r.estoqueCritico as any).total).toBe(1);
-    expect((r.producao as any).quantidadeTotal).toBe(30);
+    expect((r.producao as any).numeroOrdens).toBe(1);
     expect(r.data).toBe("2026-07-08");
   });
 

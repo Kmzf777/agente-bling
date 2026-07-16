@@ -3,6 +3,7 @@
 // O BlingClient já não expõe métodos de escrita — isto é a segunda camada (defense-in-depth).
 const PREFIXOS_LEITURA = [
   "/pedidos/vendas",
+  "/pedidos/compras",
   "/produtos",
   "/estoques",
   "/ordens-producao",

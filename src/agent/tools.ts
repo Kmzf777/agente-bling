@@ -62,8 +62,8 @@ export function construirTools(deps: ToolDeps) {
       execute: async (a) => consultarEstoque({ client: deps.client }, a as any),
     }),
     consultar_producao: tool({
-      description: "Ordens de produção e quantidade produzida num período.",
-      inputSchema: z.object({ ...periodoReq, situacao: z.enum(["abertas", "concluidas", "todas"]).optional() }),
+      description: "Produção do período. No Canastra, produção = pedidos de compra do contato 'Fabrica' (cada pedido de compra da Fabrica é uma ordem de produção). Retorna nº de ordens e valor total.",
+      inputSchema: z.object({ ...periodoReq }),
       execute: async (a) => consultarProducao(base, a as any),
     }),
     consultar_clientes: tool({

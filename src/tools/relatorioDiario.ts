@@ -20,7 +20,7 @@ export async function gerarRelatorioDiario(deps: RelatorioDeps, args: RelatorioA
     seguro(() => consultarVendas({ client: deps.client, hoje }, { periodo: p })),
     seguro(() => consultarFaturamento({ client: deps.client, hoje, situacoesFaturado: deps.situacoesFaturado }, { periodo: p })),
     seguro(() => consultarEstoque({ client: deps.client }, { filtro: "abaixo_minimo" })),
-    seguro(() => consultarProducao({ client: deps.client, hoje }, { periodo: p, situacao: "todas" })),
+    seguro(() => consultarProducao({ client: deps.client, hoje }, { periodo: p })),
   ]);
   return { data: dataInicial, vendas, faturamento, estoqueCritico, producao };
 }

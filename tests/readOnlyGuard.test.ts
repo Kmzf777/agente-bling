@@ -7,6 +7,7 @@ describe("readOnlyGuard", () => {
     expect(validarPathLeitura("/nfe/123")).toBe(true);
     expect(validarPathLeitura("/contas/pagar")).toBe(true);
     expect(validarPathLeitura("/pedidos/vendas/123")).toBe(true);
+    expect(validarPathLeitura("/pedidos/compras")).toBe(true);
     expect(validarPathLeitura("/produtos?pagina=2")).toBe(true);
   });
   it("rejeita paths desconhecidos ou suspeitos", () => {

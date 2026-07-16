@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { listarPedidosVenda, listarOrdensProducao, listarContatos, listarContasReceber, listarContasPagar, listarNotasFiscais, listarNotasConsumidor } from "../src/bling/endpoints";
+import { listarPedidosVenda, listarPedidosCompra, listarOrdensProducao, listarContatos, listarContasReceber, listarContasPagar, listarNotasFiscais, listarNotasConsumidor } from "../src/bling/endpoints";
 
 function fakeClient(pages: any[]) {
   const calls: any[] = [];
@@ -14,6 +14,13 @@ describe("endpoints", () => {
     const { client, calls } = fakeClient([{ id: 1, total: 50 }]);
     const r = await listarPedidosVenda(client, { dataInicial: "2026-07-01", dataFinal: "2026-07-08" });
     expect(calls[0].path).toBe("/pedidos/vendas");
+    expect(calls[0].query.dataInicial).toBe("2026-07-01");
+    expect(r.itens).toHaveLength(1);
+  });
+  it("listarPedidosCompra consulta /pedidos/compras com datas", async () => {
+    const { client, calls } = fakeClient([{ id: 1 }]);
+    const r = await listarPedidosCompra(client, { dataInicial: "2026-07-01", dataFinal: "2026-07-08" });
+    expect(calls[0].path).toBe("/pedidos/compras");
     expect(calls[0].query.dataInicial).toBe("2026-07-01");
     expect(r.itens).toHaveLength(1);
   });

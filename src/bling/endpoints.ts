@@ -11,6 +11,9 @@ export async function listarPedidosVenda(c: BlingClient, f: FiltroData): Promise
 export async function obterPedidoVenda(c: BlingClient, id: number): Promise<any> {
   return c.get(`/pedidos/vendas/${id}`);
 }
+export async function listarPedidosCompra(c: BlingClient, f: FiltroData): Promise<Paginado> {
+  return c.getAllPages("/pedidos/compras", { dataInicial: f.dataInicial, dataFinal: f.dataFinal });
+}
 export async function listarProdutos(c: BlingClient): Promise<Paginado> {
   return c.getAllPages("/produtos");
 }
