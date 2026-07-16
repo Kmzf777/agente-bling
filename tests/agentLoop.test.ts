@@ -14,24 +14,24 @@ describe("runAgent (AI SDK)", () => {
     expect(r.texto).toContain("R$ 100");
   });
 
-  it("emite eventos de tool e de texto a partir do fullStream", async () => {
+  it("emite tool_inicio (com args) e tool_fim (com resumo) a partir do fullStream", async () => {
     async function* fs() {
-      yield { type: "tool-call", toolName: "consultar_vendas" };
-      yield { type: "text-delta", text: "Olá " };
-      yield { type: "text-delta", text: "gestor" };
+      yield { type: "tool-call", toolCallId: "c1", toolName: "consultar_vendas", input: { periodo: "hoje" } };
+      yield { type: "tool-result", toolCallId: "c1", toolName: "consultar_vendas", output: { numeroPedidos: 2, valorTotal: 150 } };
+      yield { type: "text-delta", text: "pronto" };
     }
-    const streamTextImpl: any = () => ({ text: Promise.resolve("Olá gestor"), fullStream: fs() });
+    const streamTextImpl: any = () => ({ text: Promise.resolve("pronto"), fullStream: fs() });
     const eventos: any[] = [];
     const r = await runAgent({
       model: {} as any, systemPrompt: "sys",
       mensagens: [{ role: "user", content: "oi" }],
       deps: depsBase, onEvent: (e) => eventos.push(e), streamTextImpl,
     });
-    expect(r.texto).toBe("Olá gestor");
+    expect(r.texto).toBe("pronto");
     expect(eventos).toEqual([
-      { tipo: "tool", nome: "consultar_vendas" },
-      { tipo: "texto", delta: "Olá " },
-      { tipo: "texto", delta: "gestor" },
+      { tipo: "tool_inicio", id: "c1", nome: "consultar_vendas", args: { periodo: "hoje" } },
+      { tipo: "tool_fim", id: "c1", resumo: "2 pedidos · R$ 150" },
+      { tipo: "texto", delta: "pronto" },
     ]);
   });
 

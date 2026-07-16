@@ -1,8 +1,12 @@
 import { streamText, stepCountIs, type LanguageModel } from "ai";
 import { construirTools, type ToolDeps } from "./tools";
+import { resumirResultado } from "./resumo";
 
 export interface Mensagem { role: "user" | "assistant"; content: any; }
-export interface AgentEvent { tipo: "tool" | "texto"; nome?: string; delta?: string; }
+export type AgentEvent =
+  | { tipo: "tool_inicio"; id: string; nome: string; args: unknown }
+  | { tipo: "tool_fim"; id: string; resumo: string }
+  | { tipo: "texto"; delta: string };
 
 export interface RunAgentParams {
   model: LanguageModel;
@@ -31,7 +35,8 @@ export async function runAgent(p: RunAgentParams): Promise<{ texto: string }> {
 
   if (p.onEvent && result.fullStream) {
     for await (const part of result.fullStream) {
-      if (part.type === "tool-call") p.onEvent({ tipo: "tool", nome: part.toolName });
+      if (part.type === "tool-call") p.onEvent({ tipo: "tool_inicio", id: part.toolCallId, nome: part.toolName, args: part.input });
+      else if (part.type === "tool-result") p.onEvent({ tipo: "tool_fim", id: part.toolCallId, resumo: resumirResultado(part.toolName, part.output) });
       else if (part.type === "text-delta") p.onEvent({ tipo: "texto", delta: part.text ?? "" });
     }
   }
