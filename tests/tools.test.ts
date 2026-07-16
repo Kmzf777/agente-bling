@@ -35,10 +35,10 @@ describe("construirTools (AI SDK)", () => {
   });
 
   it("a tool consultar_notas_fiscais agrega por CFOP e separa bonificação", async () => {
-    const client: any = { getAllPages: async () => ({ itens: [
+    const client: any = { getAllPages: async (path: string) => path === "/nfe" ? ({ itens: [
       { itens: [{ cfop: "5102", valor: 100, quantidade: 1 }] },
       { itens: [{ cfop: "5910", valor: 20, quantidade: 1 }] },
-    ], truncado: false }) };
+    ], truncado: false }) : ({ itens: [], truncado: false }) };
     const tools: any = construirTools({ client, situacoesFaturado: [], hoje: REF });
     const r = await tools.consultar_notas_fiscais.execute({ periodo: "mes_passado" });
     expect(r.totalVenda).toBe(100);

@@ -1,5 +1,5 @@
 import type { BlingClient } from "../bling/blingClient";
-import { listarNotasFiscais, obterNotaFiscal } from "../bling/endpoints";
+import { listarNotasFiscais, obterNotaFiscal, listarNotasConsumidor, obterNotaConsumidor } from "../bling/endpoints";
 import { resolverPeriodo, type Periodo } from "../util/periodo";
 
 export interface NfDeps { client: BlingClient; }
@@ -23,28 +23,38 @@ export function classificarCfop(cfop: string): CategoriaCfop {
 }
 
 interface GrupoCfop { cfop: string; categoria: CategoriaCfop; valor: number; quantidade: number; itens: number; }
+type Fonte = "nfe" | "nfce";
 
 export async function consultarNotasFiscais(deps: NfDeps, args: NfArgs, hoje: Date = new Date()) {
   const p = resolverPeriodo(args.periodo, hoje, args.dataInicial, args.dataFinal);
-  const { itens: notas, truncado } = await listarNotasFiscais(deps.client, {
-    dataInicial: p.dataInicial,
-    dataFinal: p.dataFinal,
-    tipo: args.tipo,
-  });
+  const filtro = { dataInicial: p.dataInicial, dataFinal: p.dataFinal, tipo: args.tipo };
 
-  // O endpoint de LISTA de NF-e pode não trazer os itens (CFOP) por nota. Quando faltarem,
-  // buscamos o detalhe (GET /nfe/{id}), com um teto para respeitar o rate limit do Bling.
+  // NF-e (modelo 55, B2B) + NFC-e (modelo 65, varejo) — endpoints separados na API v3.
+  const [nfe, nfce] = await Promise.all([
+    listarNotasFiscais(deps.client, filtro),
+    listarNotasConsumidor(deps.client, filtro),
+  ]);
+  const todas: { nota: any; fonte: Fonte }[] = [
+    ...nfe.itens.map((n: any) => ({ nota: n, fonte: "nfe" as const })),
+    ...nfce.itens.map((n: any) => ({ nota: n, fonte: "nfce" as const })),
+  ];
+  const truncado = nfe.truncado || nfce.truncado;
+
+  // A LISTA pode não trazer os itens (CFOP) por nota. Quando faltarem, busca o detalhe
+  // no endpoint certo (/nfe/{id} ou /nfce/{id}), com teto p/ respeitar o rate limit.
   const MAX_DETALHE = 80;
   let detalhesBuscados = 0;
   const comItens: any[] = [];
-  for (const nota of notas) {
+  for (const { nota, fonte } of todas) {
     if ((nota.itens?.length ?? 0) > 0 || nota.id == null || detalhesBuscados >= MAX_DETALHE) {
       comItens.push(nota);
       continue;
     }
     detalhesBuscados++;
     try {
-      const full: any = await obterNotaFiscal(deps.client, nota.id);
+      const full: any = fonte === "nfce"
+        ? await obterNotaConsumidor(deps.client, nota.id)
+        : await obterNotaFiscal(deps.client, nota.id);
       const d = full?.data ?? full;
       comItens.push({ ...nota, itens: d?.itens ?? [] });
     } catch {
@@ -69,13 +79,15 @@ export async function consultarNotasFiscais(deps: NfDeps, args: NfArgs, hoje: Da
 
   return {
     periodo: p,
-    totalNotas: notas.length,
+    totalNotas: todas.length,
+    totalNfe: nfe.itens.length,
+    totalNfce: nfce.itens.length,
     porCfop,
     totalVenda: somaCat("venda"),
     totalBonificacao: somaCat("bonificacao"),
     totalOutras: somaCat("outra"),
     paginacao: { truncado },
     observacao:
-      "CFOP por item da NF-e. VENDA = famílias 5.1/6.1/5.4/6.4 (inclui venda com ST). BONIFICAÇÃO = 5910/6910/5911/6911. OUTRAS (remessa/transferência/devolução, ex.: 5915) NÃO são venda.",
+      "Inclui NF-e (modelo 55) + NFC-e (varejo, modelo 65). CFOP por item: VENDA = 5.1/6.1/5.4/6.4; BONIFICAÇÃO = 5910/6910/5911/6911; OUTRAS (remessa/transferência/devolução) NÃO são venda.",
   };
 }

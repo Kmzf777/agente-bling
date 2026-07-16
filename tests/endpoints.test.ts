@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { listarPedidosVenda, listarOrdensProducao, listarContatos, listarContasReceber, listarContasPagar, listarNotasFiscais } from "../src/bling/endpoints";
+import { listarPedidosVenda, listarOrdensProducao, listarContatos, listarContasReceber, listarContasPagar, listarNotasFiscais, listarNotasConsumidor } from "../src/bling/endpoints";
 
 function fakeClient(pages: any[]) {
   const calls: any[] = [];
@@ -35,6 +35,13 @@ describe("endpoints", () => {
     await listarNotasFiscais(client, { dataInicial: "2026-06-01", dataFinal: "2026-06-30", tipo: 1, situacoes: [5] });
     expect(calls[0].query.tipo).toBe(1);
     expect(calls[0].query["situacoes[]"]).toEqual([5]);
+  });
+  it("listarNotasConsumidor consulta /nfce (varejo, modelo 65)", async () => {
+    const { client, calls } = fakeClient([{ id: 1 }]);
+    const r = await listarNotasConsumidor(client, { dataInicial: "2026-06-01", dataFinal: "2026-06-30" });
+    expect(calls[0].path).toBe("/nfce");
+    expect(calls[0].query.dataEmissaoInicial).toBe("2026-06-01");
+    expect(r.itens).toHaveLength(1);
   });
   it("listarContasPagar filtra por situacoes[] e datas de vencimento (server-side)", async () => {
     const { client, calls } = fakeClient([]);

@@ -35,14 +35,23 @@ export async function listarContasPagar(c: BlingClient, f: FiltroConta = {}): Pr
   return c.getAllPages("/contas/pagar", queryContas(f));
 }
 
-// --- Notas fiscais eletrônicas (NF-e) ---
+// --- Notas fiscais: NF-e (/nfe, modelo 55) e NFC-e (/nfce, modelo 65, varejo) ---
 export interface FiltroNfe { dataInicial: string; dataFinal: string; tipo?: number; situacoes?: number[]; }
+function queryNfe(f: FiltroNfe): Record<string, unknown> {
+  const q: Record<string, unknown> = { dataEmissaoInicial: f.dataInicial, dataEmissaoFinal: f.dataFinal };
+  if (f.tipo !== undefined) q["tipo"] = f.tipo;
+  if (f.situacoes?.length) q["situacoes[]"] = f.situacoes;
+  return q;
+}
 export async function listarNotasFiscais(c: BlingClient, f: FiltroNfe): Promise<Paginado> {
-  const query: Record<string, unknown> = { dataEmissaoInicial: f.dataInicial, dataEmissaoFinal: f.dataFinal };
-  if (f.tipo !== undefined) query["tipo"] = f.tipo;
-  if (f.situacoes?.length) query["situacoes[]"] = f.situacoes;
-  return c.getAllPages("/nfe", query);
+  return c.getAllPages("/nfe", queryNfe(f));
 }
 export async function obterNotaFiscal(c: BlingClient, id: number): Promise<any> {
   return c.get(`/nfe/${id}`);
+}
+export async function listarNotasConsumidor(c: BlingClient, f: FiltroNfe): Promise<Paginado> {
+  return c.getAllPages("/nfce", queryNfe(f));
+}
+export async function obterNotaConsumidor(c: BlingClient, id: number): Promise<any> {
+  return c.get(`/nfce/${id}`);
 }
