@@ -28,6 +28,26 @@ describe("/api/chat/stream (SSE)", () => {
     expect(r.text).toContain("Foram R$ 100.");
   });
 
+  it("repassa tool_inicio e tool_fim no SSE", async () => {
+    const app = criarApp(cfg, {
+      runAgent: async () => ({ texto: "ok" }),
+      runAgentStream: async ({ onEvent }: any) => {
+        onEvent({ tipo: "tool_inicio", id: "c1", nome: "consultar_notas_fiscais", args: { periodo: "mes_passado" } });
+        onEvent({ tipo: "tool_fim", id: "c1", resumo: "3 NF-e · venda R$ 45.000" });
+        return { texto: "pronto" };
+      },
+    });
+    const token = tokenEsperado("s");
+    const r = await request(app).post("/api/chat/stream")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ mensagens: [] })
+      .expect(200);
+    expect(r.text).toContain('"tipo":"tool_inicio"');
+    expect(r.text).toContain('"nome":"consultar_notas_fiscais"');
+    expect(r.text).toContain('"tipo":"tool_fim"');
+    expect(r.text).toContain("R$ 45.000");
+  });
+
   it("exige autenticação", async () => {
     const app = criarApp(cfg, { runAgent: async () => ({ texto: "ok" }) });
     await request(app).post("/api/chat/stream").send({ mensagens: [] }).expect(401);
