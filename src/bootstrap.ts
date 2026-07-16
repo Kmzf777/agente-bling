@@ -16,7 +16,7 @@ export function iniciar() {
     clientId: cfg.blingClientId, clientSecret: cfg.blingClientSecret, tokenFile: ".bling-tokens.json",
   });
   const blingClient = new BlingClient({ tokenManager });
-  const deps = { client: blingClient, situacoesFaturado: cfg.blingSituacaoFaturadoIds };
+  const deps = { client: blingClient, situacoesFaturado: cfg.blingSituacaoFaturadoIds, producaoContatoId: cfg.producaoContatoId };
 
   // Roteia por complexidade da pergunta: consulta simples → Haiku; análise → Sonnet.
   const rotear = (mensagens: any[]) =>

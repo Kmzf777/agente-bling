@@ -5,7 +5,7 @@ import { consultarEstoque } from "./consultarEstoque";
 import { consultarProducao } from "./consultarProducao";
 import { resolverPeriodo } from "../util/periodo";
 
-export interface RelatorioDeps { client: BlingClient; hoje?: Date; situacoesFaturado: number[]; }
+export interface RelatorioDeps { client: BlingClient; hoje?: Date; situacoesFaturado: number[]; producaoContatoId?: string; }
 export interface RelatorioArgs { data?: "hoje" | "ontem"; }
 
 async function seguro<T>(fn: () => Promise<T>): Promise<T | { erro: string }> {
@@ -20,7 +20,7 @@ export async function gerarRelatorioDiario(deps: RelatorioDeps, args: RelatorioA
     seguro(() => consultarVendas({ client: deps.client, hoje }, { periodo: p })),
     seguro(() => consultarFaturamento({ client: deps.client, hoje, situacoesFaturado: deps.situacoesFaturado }, { periodo: p })),
     seguro(() => consultarEstoque({ client: deps.client }, { filtro: "abaixo_minimo" })),
-    seguro(() => consultarProducao({ client: deps.client, hoje }, { periodo: p })),
+    seguro(() => consultarProducao({ client: deps.client, hoje, contatoId: deps.producaoContatoId }, { periodo: p })),
   ]);
   return { data: dataInicial, vendas, faturamento, estoqueCritico, producao };
 }

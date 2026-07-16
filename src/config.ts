@@ -5,6 +5,7 @@ export interface AppConfig {
   blingClientSecret: string;
   blingRedirectUri: string;
   blingSituacaoFaturadoIds: number[];
+  producaoContatoId: string;
   appPassword: string;
   sessionSecret: string;
   corsOrigin: string;
@@ -30,6 +31,7 @@ export function loadConfig(env: NodeJS.ProcessEnv | Record<string, string | unde
     blingRedirectUri: env.BLING_REDIRECT_URI || "http://localhost:3000/api/bling/callback",
     blingSituacaoFaturadoIds: (env.BLING_SITUACAO_FATURADO_IDS || "")
       .split(",").map((s) => s.trim()).filter(Boolean).map(Number),
+    producaoContatoId: env.PRODUCAO_CONTATO_ID || "11424392310",
     appPassword: env.APP_PASSWORD!,
     sessionSecret: env.SESSION_SECRET!,
     corsOrigin: env.CORS_ORIGIN || "*",

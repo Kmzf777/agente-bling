@@ -14,7 +14,7 @@ import { consultarNotasFiscais } from "../tools/consultarNotasFiscais";
 import { consultarApi } from "../tools/consultarApi";
 import { CONHECIMENTO_CAFE } from "./conhecimento";
 
-export interface ToolDeps { client: BlingClient; situacoesFaturado: number[]; hoje?: Date; }
+export interface ToolDeps { client: BlingClient; situacoesFaturado: number[]; hoje?: Date; producaoContatoId?: string; }
 
 const periodoEnum = z.enum(["hoje", "ontem", "esta_semana", "semana_passada", "este_mes", "mes_passado", "personalizado"]);
 const periodoReq = {
@@ -64,7 +64,7 @@ export function construirTools(deps: ToolDeps) {
     consultar_producao: tool({
       description: "Produção do período. No Canastra, produção = pedidos de compra do contato 'Fabrica' (cada pedido de compra da Fabrica é uma ordem de produção). Retorna nº de ordens e valor total.",
       inputSchema: z.object({ ...periodoReq }),
-      execute: async (a) => consultarProducao(base, a as any),
+      execute: async (a) => consultarProducao({ ...base, contatoId: deps.producaoContatoId }, a as any),
     }),
     consultar_clientes: tool({
       description: "Clientes: contagem total, busca por nome, ou maiores clientes por valor comprado num período.",
@@ -84,7 +84,7 @@ export function construirTools(deps: ToolDeps) {
     gerar_relatorio_diario: tool({
       description: "Resumo do dia: vendas, faturamento, estoque crítico e produção.",
       inputSchema: z.object({ data: z.enum(["hoje", "ontem"]).optional() }),
-      execute: async (a) => gerarRelatorioDiario({ client: deps.client, hoje, situacoesFaturado: deps.situacoesFaturado }, a as any),
+      execute: async (a) => gerarRelatorioDiario({ client: deps.client, hoje, situacoesFaturado: deps.situacoesFaturado, producaoContatoId: deps.producaoContatoId }, a as any),
     }),
     bling_consultar_api: tool({
       description: "Escape hatch: consulta QUALQUER endpoint de LEITURA da API v3 do Bling que as outras tools não cobrem (ex.: '/nfe', '/contas/pagar', '/depositos'). Aceita params e paginação. Somente leitura.",
