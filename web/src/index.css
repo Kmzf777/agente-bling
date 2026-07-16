@@ -2,13 +2,12 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/geist-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: 'Fraunces Variable', 'Fraunces', ui-serif, Georgia, serif;
-    --font-serif: 'Fraunces Variable', 'Fraunces', ui-serif, Georgia, serif;
+    --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
@@ -41,9 +40,6 @@
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
-    /* Signature crema / coffee-cherry accents */
-    --color-crema: var(--crema);
-    --color-cereja: var(--cereja);
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -54,84 +50,79 @@
 }
 
 /*
- * "Canastra" — café artesanal da Serra da Canastra.
- * Elevated warm dark theme: espresso backgrounds, latte-cream text,
- * terracotta/coffee-cherry ("cereja") accent, golden crema highlight.
- * Hues kept in the warm 40–75 band so nothing reads clinical/cold.
+ * Light fallback — cold white, same brand green, minimal.
  */
 :root {
-    /* Light "café com leite" — warm parchment. Kept legible & tasteful. */
-    --background: oklch(0.965 0.012 78);
-    --foreground: oklch(0.245 0.024 55);
-    --card: oklch(0.99 0.008 82);
-    --card-foreground: oklch(0.245 0.024 55);
-    --popover: oklch(0.99 0.008 82);
-    --popover-foreground: oklch(0.245 0.024 55);
-    --primary: oklch(0.505 0.14 45);
-    --primary-foreground: oklch(0.985 0.01 80);
-    --secondary: oklch(0.93 0.018 74);
-    --secondary-foreground: oklch(0.33 0.03 52);
-    --muted: oklch(0.93 0.016 76);
-    --muted-foreground: oklch(0.505 0.028 58);
-    --accent: oklch(0.9 0.032 66);
-    --accent-foreground: oklch(0.33 0.05 48);
-    --destructive: oklch(0.55 0.2 27);
-    --border: oklch(0.885 0.02 68);
-    --input: oklch(0.885 0.02 68);
-    --ring: oklch(0.575 0.13 48);
-    --crema: oklch(0.7 0.13 72);
-    --cereja: oklch(0.52 0.16 38);
-    --chart-1: oklch(0.55 0.15 44);
-    --chart-2: oklch(0.66 0.12 66);
-    --chart-3: oklch(0.7 0.13 88);
-    --chart-4: oklch(0.48 0.09 52);
-    --chart-5: oklch(0.4 0.07 46);
-    --radius: 0.75rem;
-    --sidebar: oklch(0.945 0.014 76);
-    --sidebar-foreground: oklch(0.245 0.024 55);
-    --sidebar-primary: oklch(0.505 0.14 45);
-    --sidebar-primary-foreground: oklch(0.985 0.01 80);
-    --sidebar-accent: oklch(0.9 0.032 66);
-    --sidebar-accent-foreground: oklch(0.33 0.05 48);
-    --sidebar-border: oklch(0.885 0.02 68);
-    --sidebar-ring: oklch(0.575 0.13 48);
+    --background: #ffffff;
+    --foreground: #171717;
+    --card: #f9f9f9;
+    --card-foreground: #171717;
+    --popover: #f9f9f9;
+    --popover-foreground: #171717;
+    --primary: #3ECF8E;
+    --primary-foreground: #0a0a0a;
+    --secondary: #f0f0f0;
+    --secondary-foreground: #171717;
+    --muted: #f0f0f0;
+    --muted-foreground: #737373;
+    --accent: #f0f0f0;
+    --accent-foreground: #171717;
+    --destructive: #e5484d;
+    --border: #e6e6e6;
+    --input: #e6e6e6;
+    --ring: #3ECF8E;
+    --chart-1: #3ECF8E;
+    --chart-2: #5e9ecf;
+    --chart-3: #9b8cf5;
+    --chart-4: #f5a623;
+    --chart-5: #e5484d;
+    --radius: 0.5rem;
+    --sidebar: #f9f9f9;
+    --sidebar-foreground: #171717;
+    --sidebar-primary: #3ECF8E;
+    --sidebar-primary-foreground: #0a0a0a;
+    --sidebar-accent: #f0f0f0;
+    --sidebar-accent-foreground: #171717;
+    --sidebar-border: #e6e6e6;
+    --sidebar-ring: #3ECF8E;
 }
 
+/*
+ * Dark — Supabase-clone. Cold neutral backgrounds, #3ECF8E brand green.
+ * This is the primary active theme.
+ */
 .dark {
-    /* Elevated espresso — the signature look. Warm, calm, premium. */
-    --background: oklch(0.185 0.016 52);
-    --foreground: oklch(0.925 0.018 78);
-    --card: oklch(0.225 0.018 50);
-    --card-foreground: oklch(0.93 0.018 78);
-    --popover: oklch(0.225 0.018 50);
-    --popover-foreground: oklch(0.93 0.018 78);
-    --primary: oklch(0.66 0.135 52);
-    --primary-foreground: oklch(0.16 0.02 46);
-    --secondary: oklch(0.285 0.022 50);
-    --secondary-foreground: oklch(0.9 0.02 76);
-    --muted: oklch(0.275 0.018 50);
-    --muted-foreground: oklch(0.68 0.026 68);
-    --accent: oklch(0.33 0.038 52);
-    --accent-foreground: oklch(0.92 0.02 76);
-    --destructive: oklch(0.62 0.17 30);
-    --border: oklch(0.92 0.02 78 / 12%);
-    --input: oklch(0.92 0.02 78 / 15%);
-    --ring: oklch(0.66 0.135 52);
-    --crema: oklch(0.78 0.13 76);
-    --cereja: oklch(0.62 0.17 36);
-    --chart-1: oklch(0.66 0.135 52);
-    --chart-2: oklch(0.74 0.12 74);
-    --chart-3: oklch(0.7 0.14 90);
-    --chart-4: oklch(0.56 0.1 46);
-    --chart-5: oklch(0.46 0.08 44);
-    --sidebar: oklch(0.205 0.016 50);
-    --sidebar-foreground: oklch(0.925 0.018 78);
-    --sidebar-primary: oklch(0.66 0.135 52);
-    --sidebar-primary-foreground: oklch(0.16 0.02 46);
-    --sidebar-accent: oklch(0.33 0.038 52);
-    --sidebar-accent-foreground: oklch(0.92 0.02 76);
-    --sidebar-border: oklch(0.92 0.02 78 / 12%);
-    --sidebar-ring: oklch(0.66 0.135 52);
+    --background: #171717;
+    --foreground: #ededed;
+    --card: #1c1c1c;
+    --card-foreground: #ededed;
+    --popover: #1f1f1f;
+    --popover-foreground: #ededed;
+    --primary: #3ECF8E;
+    --primary-foreground: #0a0a0a;
+    --secondary: #232323;
+    --secondary-foreground: #ededed;
+    --muted: #232323;
+    --muted-foreground: #a0a0a0;
+    --accent: #232323;
+    --accent-foreground: #ededed;
+    --destructive: #e5484d;
+    --border: #2e2e2e;
+    --input: #2e2e2e;
+    --ring: #3ECF8E;
+    --chart-1: #3ECF8E;
+    --chart-2: #5e9ecf;
+    --chart-3: #9b8cf5;
+    --chart-4: #f5a623;
+    --chart-5: #e5484d;
+    --sidebar: #1c1c1c;
+    --sidebar-foreground: #ededed;
+    --sidebar-primary: #3ECF8E;
+    --sidebar-primary-foreground: #0a0a0a;
+    --sidebar-accent: #232323;
+    --sidebar-accent-foreground: #ededed;
+    --sidebar-border: #2e2e2e;
+    --sidebar-ring: #3ECF8E;
 }
 
 @layer base {
@@ -147,68 +138,57 @@
   html {
     @apply font-sans;
     }
-  /* Editorial serif for headings — the artisanal signature. */
   h1, h2, h3 {
-    @apply font-heading;
-    font-optical-sizing: auto;
-  }
-}
-
-@layer components {
-  /*
-   * Grain overlay — fine analog texture, like the paper of a coffee bag.
-   * Fixed, non-interactive, blended over the whole surface.
-   */
-  .canastra-grain::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    pointer-events: none;
-    opacity: 0.04;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  /* Warm topographic contour — a whisper of the Serra da Canastra ridgelines. */
-  .canastra-topo {
-    background-image:
-      radial-gradient(120% 120% at 100% 0%, transparent 60%, color-mix(in oklch, var(--crema) 40%, transparent) 100%),
-      repeating-radial-gradient(
-        circle at 82% 8%,
-        transparent 0,
-        transparent 34px,
-        color-mix(in oklch, var(--foreground) 4%, transparent) 34px,
-        color-mix(in oklch, var(--foreground) 4%, transparent) 35px
-      );
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
-  /* Subtle rising-steam drift for the "thinking" dots. */
-  @keyframes canastra-steam {
-    0%, 100% { transform: translateY(0); opacity: 0.35; }
-    50%      { transform: translateY(-3px); opacity: 1; }
-  }
-  .animate-steam {
-    animation: canastra-steam 1.4s ease-in-out infinite;
+  /* Subtle fade pulse for "running" states. */
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.5; }
+    }
+    .animate-pulse-soft {
+      animation: pulse-soft 1.4s ease-in-out infinite;
+    }
+
+    /* Staggered rise-in for first paint and login. */
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-rise {
+      animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* Message bubble entrance. */
+    @keyframes bubble-in {
+      from { opacity: 0; transform: translateY(5px) scale(0.99); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-pour {
+      animation: bubble-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* Spinner rotation for Loader2. */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
   }
 
-  /* Staggered rise-in used across the login + first paint. */
-  @keyframes canastra-rise {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .animate-rise {
-    animation: canastra-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  /* Message bubble entrance. */
-  @keyframes canastra-pour {
-    from { opacity: 0; transform: translateY(6px) scale(0.985); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .animate-pour {
-    animation: canastra-pour 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* Reduced motion fallbacks — show content immediately, no animation. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-pulse-soft,
+    .animate-rise,
+    .animate-pour,
+    .animate-spin {
+      animation: none;
+    }
   }
 }
