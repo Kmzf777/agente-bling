@@ -13,7 +13,7 @@ function App() {
   };
 
   return (
-    <div className="canastra-grain">
+    <div>
       {autenticado ? (
         <Chat onLogout={sair} />
       ) : (
