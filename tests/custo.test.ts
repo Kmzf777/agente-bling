@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcularCusto } from "../src/agent/custo";
+import { calcularCusto, precosPorModelo } from "../src/agent/custo";
 
 describe("calcularCusto (Sonnet)", () => {
   it("1M tokens de entrada = US$ 3", () => {
@@ -18,5 +18,13 @@ describe("calcularCusto (Sonnet)", () => {
     expect(r.usd).toBeCloseTo(0.02205, 6);
     expect(r.cacheReadTokens).toBe(1000);
     expect(r.cacheWriteTokens).toBe(1000);
+  });
+
+  it("usa as tarifas do Haiku quando o modelo é haiku", () => {
+    const r = calcularCusto(
+      { inputTokens: 1_000_000, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 },
+      precosPorModelo("claude-haiku-4-5"),
+    );
+    expect(r.usd).toBe(1); // 1M de entrada no Haiku = US$ 1 (vs US$ 3 no Sonnet)
   });
 });

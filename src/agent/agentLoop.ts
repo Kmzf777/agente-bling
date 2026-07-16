@@ -1,7 +1,7 @@
 import { streamText, stepCountIs, type LanguageModel } from "ai";
 import { construirTools, type ToolDeps } from "./tools";
 import { resumirResultado } from "./resumo";
-import { calcularCusto } from "./custo";
+import { calcularCusto, precosPorModelo } from "./custo";
 
 export interface Mensagem { role: "user" | "assistant"; content: any; }
 export type AgentEvent =
@@ -17,6 +17,7 @@ export interface RunAgentParams {
   systemPrompt: string;
   maxSteps?: number;
   usdBrl?: number; // taxa fixa USD→BRL para exibir o custo estimado em reais
+  modeloId?: string; // id do modelo usado (Sonnet/Haiku) — define a tabela de preço do custo
   onEvent?: (ev: AgentEvent) => void;
   streamTextImpl?: typeof streamText; // injeção para testes
 }
@@ -71,7 +72,7 @@ export async function runAgent(p: RunAgentParams): Promise<{ texto: string }> {
         outputTokens: Number(u.outputTokens) || 0,
         cacheReadTokens: Number(u.cachedInputTokens) || 0,
         cacheWriteTokens: cacheWrite,
-      });
+      }, precosPorModelo(p.modeloId));
       console.log(`[agent] tokens: in=${custo.inputTokens} out=${custo.outputTokens} cacheRead=${custo.cacheReadTokens} cacheWrite=${custo.cacheWriteTokens} → US$ ${custo.usd.toFixed(6)}`);
       p.onEvent?.({
         tipo: "custo",
