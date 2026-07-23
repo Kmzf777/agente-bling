@@ -115,6 +115,16 @@ describe("criarWebhookWhatsApp (handler)", () => {
     await new Promise<void>((r) => setImmediate(r));
     expect(enviados.some((e) => e.texto.includes("problema"))).toBe(true);
   });
+
+  it("resposta vazia do agente vira fallback (nunca envia texto vazio)", async () => {
+    const runAgent = vi.fn(async () => ({ texto: "   " }));
+    const { app, enviados, sessions } = montarApp({ runAgent });
+    sessions.obter("5531999").autenticado = true;
+    await request(app).post("/api/whatsapp/webhook").send(evt("5531999", "quanto vendi?")).expect(200);
+    await new Promise<void>((r) => setImmediate(r));
+    const resposta = enviados.find((e) => e.texto !== "🔎 Consultando…");
+    expect(resposta?.texto.trim().length).toBeGreaterThan(0);
+  });
 });
 
 describe("criarApp monta o webhook do WhatsApp", () => {

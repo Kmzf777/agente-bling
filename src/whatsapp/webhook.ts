@@ -87,7 +87,10 @@ async function processar(deps: WebhookDeps, { numero, texto }: MensagemRecebida)
   sessao.mensagens.push({ role: "user", content: texto });
   await evolution.sendText(numero, "🔎 Consultando…");
   try {
-    const { texto: resposta } = await deps.runAgent({ mensagens: sessao.mensagens });
+    const { texto } = await deps.runAgent({ mensagens: sessao.mensagens });
+    // Fallback defensivo: nunca enviar mensagem vazia (o WhatsApp/Evolution rejeita e
+    // o usuário ficaria sem retorno). O runAgent real já garante texto, mas o tipo não.
+    const resposta = texto?.trim() || "Não consegui gerar uma resposta agora. Tente reformular a pergunta.";
     sessao.mensagens.push({ role: "assistant", content: resposta });
     sessions.tocar(numero);
     await evolution.sendText(numero, resposta);
