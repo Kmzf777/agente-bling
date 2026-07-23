@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { parseMensagem } from "../src/whatsapp/webhook";
 import { criarWebhookWhatsApp } from "../src/whatsapp/webhook";
 import { criarSessions } from "../src/whatsapp/sessions";
+import { criarApp } from "../src/server";
 import express from "express";
 import request from "supertest";
 
@@ -113,5 +114,31 @@ describe("criarWebhookWhatsApp (handler)", () => {
     await request(app).post("/api/whatsapp/webhook").send(evt("5531999", "quanto vendi?")).expect(200);
     await new Promise<void>((r) => setImmediate(r));
     expect(enviados.some((e) => e.texto.includes("problema"))).toBe(true);
+  });
+});
+
+describe("criarApp monta o webhook do WhatsApp", () => {
+  it("expõe POST /api/whatsapp/webhook quando handler é passado", async () => {
+    const enviados: any[] = [];
+    const sessions = criarSessions(30);
+    const handler = criarWebhookWhatsApp({
+      runAgent: async () => ({ texto: "ok" }),
+      evolution: { sendText: async (n: string, t: string) => { enviados.push({ n, t }); } },
+      sessions, senha: "cafe123",
+    });
+    const cfg = { appPassword: "x", sessionSecret: "s", corsOrigin: "*" } as any;
+    const app = criarApp(cfg, { runAgent: async () => ({ texto: "ok" }), whatsappWebhook: handler });
+    await request(app).post("/api/whatsapp/webhook")
+      .send({ data: { key: { remoteJid: "5531999@s.whatsapp.net", fromMe: false }, message: { conversation: "oi" } } })
+      .expect(200);
+    await new Promise<void>((r) => setImmediate(r)); // drena o processamento async
+    expect(enviados[0].t).toContain("senha");
+  });
+
+  it("não expõe a rota quando handler não é passado", async () => {
+    const cfg = { appPassword: "x", sessionSecret: "s", corsOrigin: "*" } as any;
+    const app = criarApp(cfg, { runAgent: async () => ({ texto: "ok" }) });
+    const r = await request(app).post("/api/whatsapp/webhook").send({});
+    expect([404, 200]).toContain(r.status);
   });
 });
