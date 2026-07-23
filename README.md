@@ -97,6 +97,30 @@ Cenário: o **backend roda na sua máquina**, exposto à internet via **ngrok**,
 
 > No plano free a URL do ngrok muda a cada reinício — reivindique o **domínio estático gratuito** para não ter que atualizar `VITE_API_BASE` toda vez.
 
+## Canal WhatsApp (Evolution API, self-host)
+
+O agente também atende pelo **WhatsApp**, com a **Evolution API** rodando localmente em Docker.
+Tudo é local — **não precisa de ngrok** (a Evolution fala com o backend em `host.docker.internal`).
+
+1. **Suba a Evolution + Postgres:**
+   ```powershell
+   docker compose up -d
+   ```
+2. **Crie a instância e pareie o WhatsApp:** abra `http://localhost:8080/manager`, entre com a
+   `EVOLUTION_API_KEY`, crie uma instância chamada **`canastra`** (igual a `EVOLUTION_INSTANCE`) e
+   leia o **QR Code** com o WhatsApp que será o número do bot.
+3. **Configure o webhook da instância** (no manager, na instância `canastra`):
+   - URL: `http://host.docker.internal:3000/api/whatsapp/webhook`
+   - Evento: **`MESSAGES_UPSERT`** habilitado.
+4. **Preencha o `.env`** (`EVOLUTION_API_KEY`, `WHATSAPP_ACCESS_PASSWORD`, etc.) e **suba o backend**
+   (`npm start`). Se as envs do WhatsApp estiverem preenchidas, o log mostra `[whatsapp] canal habilitado`.
+5. **Teste:** mande qualquer mensagem para o número → o bot pede a senha. Envie a
+   `WHATSAPP_ACCESS_PASSWORD` → o bot libera. Agora pergunte "quanto vendi hoje?".
+   Para reiniciar a sessão, envie **`sair`**.
+
+> **Acesso:** cada número precisa enviar a senha na 1ª mensagem; a sessão expira após
+> `WHATSAPP_SESSION_TIMEOUT_MIN` minutos de inatividade. Histórico vive em memória (some ao reiniciar o backend).
+
 ## O que dá para perguntar
 - "Quanto vendi hoje / essa semana / esse mês?" · "Qual meu ticket médio?"
 - "Qual o faturamento do mês? E comparado ao mês passado?"
@@ -121,7 +145,7 @@ npm test            # suíte do backend (vitest)
   em produção dá para restringir à URL do frontend.
 
 ## Fora do escopo
-WhatsApp · banco de dados · histórico persistente · relatório automático agendado/por e-mail ·
+banco de dados · histórico persistente · relatório automático agendado/por e-mail ·
 **escrita no Bling** (o agente é somente-leitura) · múltiplos usuários com permissões · sub-agentes (fase 2).
 
 > **NF-e/fiscal (CFOP, venda vs bonificação)** e **Financeiro (contas a pagar/receber, pago vs em aberto)**
