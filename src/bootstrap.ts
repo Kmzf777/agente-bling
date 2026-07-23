@@ -7,6 +7,9 @@ import { criarModelo } from "./agent/provider";
 import { montarSystemPrompt } from "./agent/systemPrompt";
 import { ehComplexa } from "./agent/router";
 import { criarApp } from "./server";
+import { criarSessions } from "./whatsapp/sessions";
+import { criarEvolutionClient } from "./whatsapp/evolutionClient";
+import { criarWebhookWhatsApp } from "./whatsapp/webhook";
 
 export function iniciar() {
   const cfg = loadConfig();
@@ -24,6 +27,25 @@ export function iniciar() {
       ? { model: modelComplexo, modeloId: cfg.agentModel }
       : { model: modelSimples, modeloId: cfg.agentModelSimples };
 
+  // Canal WhatsApp: só liga se as envs estiverem presentes (cfg.whatsapp.habilitado).
+  const whatsappWebhook = cfg.whatsapp.habilitado
+    ? criarWebhookWhatsApp({
+        runAgent: ({ mensagens }) => {
+          const r = rotear(mensagens as any);
+          return runAgent({
+            model: r.model, modeloId: r.modeloId, systemPrompt: montarSystemPrompt(),
+            mensagens: mensagens as any, deps, maxSteps: cfg.agentMaxSteps, usdBrl: cfg.usdBrl,
+          });
+        },
+        evolution: criarEvolutionClient({
+          url: cfg.whatsapp.apiUrl, apiKey: cfg.whatsapp.apiKey, instance: cfg.whatsapp.instance,
+        }),
+        sessions: criarSessions(cfg.whatsapp.sessionTimeoutMin),
+        senha: cfg.whatsapp.accessPassword,
+      })
+    : undefined;
+  if (whatsappWebhook) console.log("[whatsapp] canal habilitado");
+
   const app = criarApp(cfg, {
     runAgent: ({ mensagens }) => {
       const r = rotear(mensagens as any);
@@ -39,6 +61,7 @@ export function iniciar() {
         mensagens: mensagens as any, deps, maxSteps: cfg.agentMaxSteps, usdBrl: cfg.usdBrl, onEvent,
       });
     },
+    whatsappWebhook,
   });
   app.listen(cfg.port, () => console.log(`Agente Bling Café rodando em http://localhost:${cfg.port}`));
 }
