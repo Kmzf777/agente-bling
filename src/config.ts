@@ -16,6 +16,14 @@ export interface AppConfig {
   anthropicApiKey: string;
   agentMaxSteps: number;
   usdBrl: number;
+  whatsapp: {
+    habilitado: boolean;
+    apiUrl: string;
+    apiKey: string;
+    instance: string;
+    accessPassword: string;
+    sessionTimeoutMin: number;
+  };
 }
 
 const REQUIRED = ["ANTHROPIC_API_KEY", "BLING_CLIENT_ID", "BLING_CLIENT_SECRET", "APP_PASSWORD", "SESSION_SECRET"] as const;
@@ -42,5 +50,18 @@ export function loadConfig(env: NodeJS.ProcessEnv | Record<string, string | unde
     anthropicApiKey: env.ANTHROPIC_API_KEY || "",
     agentMaxSteps: Number(env.AGENT_MAX_STEPS || 20),
     usdBrl: Number(env.USD_BRL || 5.6),
+    // Canal WhatsApp via Evolution API. Só fica habilitado quando temos
+    // a chave da API e a senha de acesso configuradas.
+    whatsapp: (() => {
+      const whatsappHabilitado = Boolean(env.EVOLUTION_API_KEY && env.WHATSAPP_ACCESS_PASSWORD);
+      return {
+        habilitado: whatsappHabilitado,
+        apiUrl: env.EVOLUTION_API_URL || "http://localhost:8080",
+        apiKey: env.EVOLUTION_API_KEY || "",
+        instance: env.EVOLUTION_INSTANCE || "canastra",
+        accessPassword: env.WHATSAPP_ACCESS_PASSWORD || "",
+        sessionTimeoutMin: Number(env.WHATSAPP_SESSION_TIMEOUT_MIN || 30),
+      };
+    })(),
   };
 }
