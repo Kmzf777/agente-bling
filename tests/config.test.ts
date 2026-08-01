@@ -39,24 +39,25 @@ describe("loadConfig", () => {
     expect(cfg.agentModel).toBe("claude-opus-4-5");
   });
 
-  it("carrega config do WhatsApp e deriva 'habilitado'", () => {
+  it("carrega config do Telegram e deriva 'habilitado'", () => {
     const cfg = loadConfig({
       ANTHROPIC_API_KEY: "a", BLING_CLIENT_ID: "b", BLING_CLIENT_SECRET: "c",
       APP_PASSWORD: "d", SESSION_SECRET: "e",
-      EVOLUTION_API_URL: "http://localhost:8080", EVOLUTION_API_KEY: "K",
-      EVOLUTION_INSTANCE: "canastra", WHATSAPP_ACCESS_PASSWORD: "cafe123",
+      TELEGRAM_BOT_TOKEN: "123:TOKEN", TELEGRAM_ACCESS_PASSWORD: "cafe123",
+      TELEGRAM_WEBHOOK_SECRET: "whsec", TELEGRAM_SESSION_TIMEOUT_MIN: "45",
     });
-    expect(cfg.whatsapp.habilitado).toBe(true);
-    expect(cfg.whatsapp.apiUrl).toBe("http://localhost:8080");
-    expect(cfg.whatsapp.instance).toBe("canastra");
-    expect(cfg.whatsapp.sessionTimeoutMin).toBe(30);
+    expect(cfg.telegram.habilitado).toBe(true);
+    expect(cfg.telegram.botToken).toBe("123:TOKEN");
+    expect(cfg.telegram.accessPassword).toBe("cafe123");
+    expect(cfg.telegram.webhookSecret).toBe("whsec");
+    expect(cfg.telegram.sessionTimeoutMin).toBe(45);
   });
 
-  it("WhatsApp desligado quando faltam envs", () => {
+  it("Telegram desligado quando faltam envs", () => {
     const cfg = loadConfig({
       ANTHROPIC_API_KEY: "a", BLING_CLIENT_ID: "b", BLING_CLIENT_SECRET: "c",
       APP_PASSWORD: "d", SESSION_SECRET: "e",
     });
-    expect(cfg.whatsapp.habilitado).toBe(false);
+    expect(cfg.telegram.habilitado).toBe(false);
   });
 });

@@ -7,16 +7,16 @@ export interface Sessao {
 }
 
 export interface SessionStore {
-  /** Retorna a sessão viva do número, ou cria uma nova (resetando se expirou). */
-  obter(numero: string): Sessao;
-  /** Renova a expiração do número (agora + timeout). */
-  tocar(numero: string): void;
+  /** Retorna a sessão viva do chatId, ou cria uma nova (resetando se expirou). */
+  obter(chatId: string): Sessao;
+  /** Renova a expiração do chatId (agora + timeout). */
+  tocar(chatId: string): void;
   /** Remove a sessão (comando de reset). */
-  limpar(numero: string): void;
+  limpar(chatId: string): void;
 }
 
 /**
- * Store em memória por número. Coerente com a filosofia "sem banco": o histórico
+ * Store em memória por chatId do Telegram. Coerente com a filosofia "sem banco": o histórico
  * vive na RAM do backend e some ao reiniciar. Sessões inativas expiram após `timeoutMin`.
  * `agora` é injetável para os testes.
  */
@@ -25,21 +25,21 @@ export function criarSessions(timeoutMin: number, agora: () => number = Date.now
   const ttl = timeoutMin * 60 * 1000;
   const nova = (): Sessao => ({ autenticado: false, mensagens: [], expiraEm: agora() + ttl });
   return {
-    obter(numero) {
-      const s = mapa.get(numero);
+    obter(chatId) {
+      const s = mapa.get(chatId);
       if (!s || agora() > s.expiraEm) {
         const n = nova();
-        mapa.set(numero, n);
+        mapa.set(chatId, n);
         return n;
       }
       return s;
     },
-    tocar(numero) {
-      const s = mapa.get(numero);
+    tocar(chatId) {
+      const s = mapa.get(chatId);
       if (s) s.expiraEm = agora() + ttl;
     },
-    limpar(numero) {
-      mapa.delete(numero);
+    limpar(chatId) {
+      mapa.delete(chatId);
     },
   };
 }
