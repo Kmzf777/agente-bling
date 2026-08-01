@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { decidirAuth } from "../src/whatsapp/auth";
+import { decidirAuth } from "../src/telegram/auth";
 
-describe("decidirAuth (senha na 1ª mensagem)", () => {
+describe("decidirAuth (Telegram, senha na 1ª mensagem)", () => {
   const senha = "cafe123";
 
   it("já autenticado → segue", () => {

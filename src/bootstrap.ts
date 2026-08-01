@@ -7,9 +7,8 @@ import { criarModelo } from "./agent/provider";
 import { montarSystemPrompt } from "./agent/systemPrompt";
 import { ehComplexa } from "./agent/router";
 import { criarApp } from "./server";
-import { criarSessions } from "./whatsapp/sessions";
-import { criarEvolutionClient } from "./whatsapp/evolutionClient";
-import { criarWebhookWhatsApp } from "./whatsapp/webhook";
+import { criarSessions } from "./telegram/sessions";
+import { criarTelegramClient, criarWebhookTelegram } from "./telegram/webhook";
 
 export function iniciar() {
   const cfg = loadConfig();
@@ -27,9 +26,9 @@ export function iniciar() {
       ? { model: modelComplexo, modeloId: cfg.agentModel }
       : { model: modelSimples, modeloId: cfg.agentModelSimples };
 
-  // Canal WhatsApp: só liga se as envs estiverem presentes (cfg.whatsapp.habilitado).
-  const whatsappWebhook = cfg.whatsapp.habilitado
-    ? criarWebhookWhatsApp({
+  // Canal Telegram: só liga se as envs estiverem presentes (cfg.telegram.habilitado).
+  const telegramWebhook = cfg.telegram.habilitado
+    ? criarWebhookTelegram({
         runAgent: ({ mensagens }) => {
           const r = rotear(mensagens as any);
           return runAgent({
@@ -37,14 +36,12 @@ export function iniciar() {
             mensagens: mensagens as any, deps, maxSteps: cfg.agentMaxSteps, usdBrl: cfg.usdBrl,
           });
         },
-        evolution: criarEvolutionClient({
-          url: cfg.whatsapp.apiUrl, apiKey: cfg.whatsapp.apiKey, instance: cfg.whatsapp.instance,
-        }),
-        sessions: criarSessions(cfg.whatsapp.sessionTimeoutMin),
-        senha: cfg.whatsapp.accessPassword,
+        telegram: criarTelegramClient(cfg.telegram.botToken),
+        sessions: criarSessions(cfg.telegram.sessionTimeoutMin),
+        senha: cfg.telegram.accessPassword,
       })
     : undefined;
-  if (whatsappWebhook) console.log("[whatsapp] canal habilitado");
+  if (telegramWebhook) console.log("[telegram] canal habilitado");
 
   const app = criarApp(cfg, {
     runAgent: ({ mensagens }) => {
@@ -61,7 +58,7 @@ export function iniciar() {
         mensagens: mensagens as any, deps, maxSteps: cfg.agentMaxSteps, usdBrl: cfg.usdBrl, onEvent,
       });
     },
-    whatsappWebhook,
+    telegramWebhook,
   });
   app.listen(cfg.port, () => console.log(`Agente Bling Café rodando em http://localhost:${cfg.port}`));
 }

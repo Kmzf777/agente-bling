@@ -97,29 +97,32 @@ Cenário: o **backend roda na sua máquina**, exposto à internet via **ngrok**,
 
 > No plano free a URL do ngrok muda a cada reinício — reivindique o **domínio estático gratuito** para não ter que atualizar `VITE_API_BASE` toda vez.
 
-## Canal WhatsApp (Evolution API, self-host)
+## Canal Telegram (Bot API)
 
-O agente também atende pelo **WhatsApp**, com a **Evolution API** rodando localmente em Docker.
-Tudo é local — **não precisa de ngrok** (a Evolution fala com o backend em `host.docker.internal`).
+O agente também atende pelo **Telegram**, via webhook da Bot API. Não precisa de Docker nem de
+infra extra — basta expor o backend via ngrok (ou qualquer URL pública) e registrar o webhook.
 
-1. **Suba a Evolution + Postgres:**
-   ```powershell
-   docker compose up -d
+1. **Crie um bot** no Telegram: abra uma conversa com o [@BotFather](https://t.me/BotFather),
+   use `/newbot` e copie o **token** gerado.
+2. **Preencha o `.env`:**
+   ```env
+   TELEGRAM_BOT_TOKEN=123456789:ABCdef...
+   TELEGRAM_ACCESS_PASSWORD=sua-senha-de-acesso
    ```
-2. **Crie a instância e pareie o WhatsApp:** abra `http://localhost:8080/manager`, entre com a
-   `EVOLUTION_API_KEY`, crie uma instância chamada **`canastra`** (igual a `EVOLUTION_INSTANCE`) e
-   leia o **QR Code** com o WhatsApp que será o número do bot.
-3. **Configure o webhook da instância** (no manager, na instância `canastra`):
-   - URL: `http://host.docker.internal:3000/api/whatsapp/webhook`
-   - Evento: **`MESSAGES_UPSERT`** habilitado.
-4. **Preencha o `.env`** (`EVOLUTION_API_KEY`, `WHATSAPP_ACCESS_PASSWORD`, etc.) e **suba o backend**
-   (`npm start`). Se as envs do WhatsApp estiverem preenchidas, o log mostra `[whatsapp] canal habilitado`.
-5. **Teste:** mande qualquer mensagem para o número → o bot pede a senha. Envie a
-   `WHATSAPP_ACCESS_PASSWORD` → o bot libera. Agora pergunte "quanto vendi hoje?".
+3. **Exponha o backend** com ngrok (veja seção de Deploy acima) para ter uma URL pública HTTPS,
+   por exemplo `https://SEU-SUBDOMINIO.ngrok-free.app`.
+4. **Registre o webhook** no Telegram (troque `<TOKEN>` e `<URL>` pelos seus valores):
+   ```powershell
+   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=<URL>/api/telegram/webhook"
+   ```
+5. **Suba o backend** (`npm start`). Se as envs do Telegram estiverem preenchidas, o log mostra
+   `[telegram] canal habilitado`.
+6. **Teste:** abra o bot no Telegram e mande qualquer mensagem → o bot pede a senha.
+   Envie a `TELEGRAM_ACCESS_PASSWORD` → o bot libera. Agora pergunte "quanto vendi hoje?".
    Para reiniciar a sessão, envie **`sair`**.
 
-> **Acesso:** cada número precisa enviar a senha na 1ª mensagem; a sessão expira após
-> `WHATSAPP_SESSION_TIMEOUT_MIN` minutos de inatividade. Histórico vive em memória (some ao reiniciar o backend).
+> **Acesso:** cada chat precisa enviar a senha na 1ª mensagem; a sessão expira após
+> `TELEGRAM_SESSION_TIMEOUT_MIN` minutos de inatividade. Histórico vive em memória (some ao reiniciar o backend).
 
 ## O que dá para perguntar
 - "Quanto vendi hoje / essa semana / esse mês?" · "Qual meu ticket médio?"

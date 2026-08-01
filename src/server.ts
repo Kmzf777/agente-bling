@@ -6,7 +6,7 @@ import type { AppConfig } from "./config";
 export interface ServerDeps {
   runAgent: (args: { mensagens: unknown[] }) => Promise<{ texto: string }>;
   runAgentStream?: (args: { mensagens: unknown[]; onEvent: (ev: unknown) => void }) => Promise<{ texto: string }>;
-  whatsappWebhook?: import("express").RequestHandler;
+  telegramWebhook?: import("express").RequestHandler;
 }
 
 export function criarApp(cfg: AppConfig, deps: ServerDeps): Express {
@@ -68,11 +68,11 @@ export function criarApp(cfg: AppConfig, deps: ServerDeps): Express {
     }
   });
 
-  // Canal WhatsApp (Evolution API): recebe mensagens por webhook. Sem Bearer — a
-  // proteção é a senha na 1ª mensagem + o fato de rodar em rede local. Registrado só
-  // quando o canal está habilitado (deps.whatsappWebhook definido).
-  if (deps.whatsappWebhook) {
-    app.post("/api/whatsapp/webhook", deps.whatsappWebhook);
+  // Canal Telegram (Bot API): recebe updates por webhook. Sem Bearer — a proteção é a
+  // senha na 1ª mensagem + secret token do Telegram. Registrado só quando o canal está
+  // habilitado (deps.telegramWebhook definido).
+  if (deps.telegramWebhook) {
+    app.post("/api/telegram/webhook", deps.telegramWebhook);
   }
 
   // Serve o frontend buildado (quando tudo roda local numa porta só).
