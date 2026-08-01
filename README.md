@@ -82,6 +82,57 @@ npm run dev                 # backend (tsx watch) em :3000
 npm --prefix web run dev    # frontend (Vite) — abre a URL do Vite; /api é proxied para :3000
 ```
 
+## Deploy na VPS
+
+Deploy automático via **GitHub Actions** em cada push na `main`: roda os testes, faz o build do frontend e atualiza a VPS via SSH.
+
+### Pré-requisitos na VPS
+
+```bash
+# Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# PM2 (gerenciador de processos)
+sudo npm install -g pm2
+
+# nginx
+sudo apt-get install -y nginx
+
+# Clone e configuração inicial
+git clone https://github.com/SEU_USUARIO/agente-bling-cafe.git ~/agente-bling-cafe
+cd ~/agente-bling-cafe
+npm ci --omit=dev
+cp .env.example .env   # preencha as variáveis reais
+pm2 start ecosystem.config.cjs
+pm2 save
+pm2 startup            # cola o comando gerado (para reiniciar no boot)
+```
+
+### nginx
+
+Copie e ajuste o arquivo de configuração incluído no repositório:
+
+```bash
+sudo cp docs/nginx-agente-bling.conf /etc/nginx/sites-available/agente-bling
+# edite SEU_DOMINIO.com no arquivo
+sudo ln -s /etc/nginx/sites-available/agente-bling /etc/nginx/sites-enabled/
+sudo certbot --nginx -d SEU_DOMINIO.com
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### Secrets no GitHub
+
+Configure em *Settings → Secrets and variables → Actions*:
+
+| Secret | Valor |
+|---|---|
+| `VPS_HOST` | IP ou domínio da VPS |
+| `VPS_USER` | Usuário SSH (ex.: `deploy` ou `ubuntu`) |
+| `VPS_SSH_KEY` | Chave SSH privada (PEM) para acesso à VPS |
+
+Após configurar os secrets, qualquer push em `main` fará o deploy automaticamente.
+
 ## Deploy: backend local + ngrok + frontend na Vercel
 Cenário: o **backend roda na sua máquina**, exposto à internet via **ngrok**, e o **frontend fica na Vercel**. Como ficam em domínios diferentes, a auth é por **token Bearer** (não cookie) e o backend tem **CORS** liberado.
 
