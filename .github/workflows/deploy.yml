@@ -51,7 +51,7 @@ jobs:
           npm --prefix web install
           npm --prefix web run build
 
-      - name: Deploy via SSH
+      - name: Atualiza backend na VPS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -59,23 +59,9 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd ~/agente-bling-cafe
-
-            # Atualiza o código
+            cd ${{ secrets.VPS_APP_PATH }}
             git pull origin main
-
-            # Instala dependências de produção
             npm ci --omit=dev
-
-            # Reinstala tsx (movido para dependencies; garantia)
-            npm install tsx --no-save 2>/dev/null || true
-
-            # Copia o build do frontend (gerado no runner)
-            # (o runner faz upload via scp em etapa separada)
-
-            # Reinicia com PM2
-            pm2 reload ecosystem.config.cjs --update-env || pm2 start ecosystem.config.cjs
-            pm2 save
 
       - name: Copia build do frontend para VPS
         uses: appleboy/scp-action@v0.1.7
@@ -84,5 +70,16 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: 'web/dist/*'
-          target: '~/agente-bling-cafe/web/dist'
+          target: '${{ secrets.VPS_APP_PATH }}/web/dist'
           strip_components: 2
+
+      - name: Reinicia servidor via PM2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.VPS_APP_PATH }}
+            pm2 reload ecosystem.config.cjs --update-env || pm2 start ecosystem.config.cjs
+            pm2 save
