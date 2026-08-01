@@ -10,6 +10,7 @@
     "dev": "tsx watch src/bootstrap.ts",
     "start": "tsx src/bootstrap.ts",
     "bling:auth": "tsx src/bling/authSetup.ts",
+    "leads:export": "tsx src/scripts/exportarLeads.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -19,6 +20,7 @@
     "ai": "^5.0.214",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
     "express": "^4.21.2",
     "openai": "^6.46.0",
     "zod": "^3.25.76"
