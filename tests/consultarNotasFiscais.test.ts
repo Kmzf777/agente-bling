@@ -109,7 +109,7 @@ describe("consultarNotasFiscais", () => {
     const cafeA = r.porProduto.find((p: any) => p.descricao === "Café A");
     expect(cafeA.quantidade).toBe(3); // 2 + 1
     expect(cafeA.valor).toBe(150);
-    expect(r.porProduto[0].descricao).toBe("Café A"); // ordenado por quantidade desc
+    expect(r.porProduto[0].descricao).toBe("Café B"); // ordenado por quantidade desc (4 > 3)
   });
 
   it("busca o detalhe de MAIS de 80 notas (sem teto de 80)", async () => {

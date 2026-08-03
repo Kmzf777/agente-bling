@@ -98,7 +98,7 @@ export async function consultarNotasFiscais(deps: NfDeps, args: NfArgs, hoje: Da
   }
   const porCfop = [...porCfopMap.values()].map((c) => ({ ...c, valor: arred(c.valor) })).sort((a, b) => b.valor - a.valor);
   const porProduto = [...porProdutoMap.values()].map((p) => ({ ...p, valor: arred(p.valor) }))
-    .sort((a, b) => b.valor - a.valor || b.quantidade - a.quantidade).slice(0, TOP_PRODUTOS);
+    .sort((a, b) => b.quantidade - a.quantidade || b.valor - a.valor).slice(0, TOP_PRODUTOS);
   const somaCat = (cat: CategoriaCfop) =>
     arred(porCfop.filter((c) => c.categoria === cat).reduce((s, c) => s + c.valor, 0));
 
