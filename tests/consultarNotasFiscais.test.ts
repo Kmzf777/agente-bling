@@ -76,4 +76,55 @@ describe("consultarNotasFiscais", () => {
     expect(r.porCfop.find((c: any) => c.cfop === "5102")?.valor).toBe(80);
     expect(r.totalVenda).toBe(80);
   });
+
+  it("filtra por lista de CFOPs (quantidade + valor) e ignora o resto", async () => {
+    const client = clienteNotas({
+      "/nfe": [
+        nf([{ descricao: "Café A", codigo: "A", cfop: "5101", valor: 100, quantidade: 10 }]),
+        nf([{ descricao: "Café B", codigo: "B", cfop: "6102", valor: 200, quantidade: 5 }]),
+        nf([{ descricao: "Remessa", cfop: "5915", valor: 999, quantidade: 100 }]),
+        nf([{ descricao: "Brinde", cfop: "5910", valor: 30, quantidade: 3 }]),
+      ],
+    });
+    const r: any = await consultarNotasFiscais(
+      { client },
+      { periodo: "mes_passado", cfops: ["5101", "5102", "6101", "6102"] },
+      new Date("2026-07-15"),
+    );
+    expect(r.filtro.cfops).toEqual(["5101", "5102", "6101", "6102"]);
+    expect(r.filtro.quantidade).toBe(15); // 10 (5101) + 5 (6102)
+    expect(r.filtro.valor).toBe(300); // 100 + 200 (NÃO inclui remessa nem brinde)
+    expect(r.filtro.porCfop.find((c: any) => c.cfop === "5101").quantidade).toBe(10);
+  });
+
+  it("quebra por produto (quantidade + valor agregados por descrição)", async () => {
+    const client = clienteNotas({
+      "/nfe": [
+        nf([{ descricao: "Café A", cfop: "5102", valor: 100, quantidade: 2 }]),
+        nf([{ descricao: "Café A", cfop: "5102", valor: 50, quantidade: 1 }]),
+        nf([{ descricao: "Café B", cfop: "5102", valor: 40, quantidade: 4 }]),
+      ],
+    });
+    const r: any = await consultarNotasFiscais({ client }, { periodo: "mes_passado" }, new Date("2026-07-15"));
+    const cafeA = r.porProduto.find((p: any) => p.descricao === "Café A");
+    expect(cafeA.quantidade).toBe(3); // 2 + 1
+    expect(cafeA.valor).toBe(150);
+    expect(r.porProduto[0].descricao).toBe("Café B"); // ordenado por quantidade desc (4 > 3)
+  });
+
+  it("busca o detalhe de MAIS de 80 notas (sem teto de 80)", async () => {
+    const notas = Array.from({ length: 120 }, (_, i) => ({ id: i + 1, numero: String(i + 1), dataEmissao: "2026-06-10" }));
+    let detalhes = 0;
+    const client = clienteNotas(
+      { "/nfe": notas },
+      async (path: string) => {
+        detalhes++;
+        return { data: { id: 1, itens: [{ descricao: "Café A", cfop: "5102", valor: 10, quantidade: 1 }] } };
+      },
+    );
+    const r: any = await consultarNotasFiscais({ client }, { periodo: "mes_passado" }, new Date("2026-07-15"));
+    expect(detalhes).toBe(120); // todas as 120 tiveram o detalhe buscado, não só 80
+    expect(r.totalVenda).toBe(1200); // 120 * 10
+    expect(r.paginacao.truncado).toBe(false);
+  });
 });

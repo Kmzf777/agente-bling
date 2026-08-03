@@ -5,6 +5,7 @@ import { consultarVendas } from "../tools/consultarVendas";
 import { consultarFaturamento } from "../tools/consultarFaturamento";
 import { consultarEstoque } from "../tools/consultarEstoque";
 import { consultarProducao } from "../tools/consultarProducao";
+import { consultarCompras } from "../tools/consultarCompras";
 import { gerarRelatorioDiario } from "../tools/relatorioDiario";
 import { consultarClientes } from "../tools/consultarClientes";
 import { consultarCatalogo } from "../tools/consultarCatalogo";
@@ -47,8 +48,8 @@ export function construirTools(deps: ToolDeps) {
       execute: async (a) => consultarFaturamento({ ...base, situacoesFaturado: deps.situacoesFaturado }, a as any),
     }),
     consultar_notas_fiscais: tool({
-      description: "Notas fiscais (NF-e) do período: itens, CFOP por item, natureza da operação; separa venda de bonificação. Use para perguntas de CFOP, bonificação ou detalhe fiscal.",
-      inputSchema: z.object({ ...periodoReq, tipo: z.number().optional().describe("0=entrada, 1=saída") }),
+      description: "Notas fiscais (NF-e + NFC-e) do período: itens, CFOP por item, quantidade E valor por CFOP e por produto; separa venda de bonificação. Passe 'cfops' para filtrar CFOPs específicos (ex.: vendas = 5101,5102,6101,6102) e obter a quantidade+valor só desses. Busca TODAS as notas do período (pode demorar em mês cheio).",
+      inputSchema: z.object({ ...periodoReq, tipo: z.number().optional().describe("0=entrada, 1=saída"), cfops: z.array(z.string()).optional().describe("Lista de CFOPs para filtrar, ex.: ['5101','5102','6101','6102']") }),
       execute: async (a) => consultarNotasFiscais({ client: deps.client }, a as any, hoje),
     }),
     consultar_financeiro: tool({
@@ -65,6 +66,11 @@ export function construirTools(deps: ToolDeps) {
       description: "Produção do período. No Canastra, produção = pedidos de compra do contato 'Fabrica' (cada pedido de compra da Fabrica é uma ordem de produção). Retorna nº de ordens e valor total.",
       inputSchema: z.object({ ...periodoReq }),
       execute: async (a) => consultarProducao({ ...base, contatoId: deps.producaoContatoId }, a as any),
+    }),
+    consultar_compras: tool({
+      description: "Compras do período (pedidos de compra) com QUANTIDADE por item. Separa PRODUÇÃO (pedidos do contato 'Fabrica' = produtos torrados/produzidos) de EXTERNO (fornecedores: matéria-prima, café verde/insumos). Use para 'quanto comprei/produzi em quantidade'. Busca TODOS os pedidos (pode demorar em mês cheio).",
+      inputSchema: z.object({ ...periodoReq }),
+      execute: async (a) => consultarCompras({ ...base, contatoId: deps.producaoContatoId }, a as any),
     }),
     consultar_clientes: tool({
       description: "Clientes: contagem total, busca por nome, ou maiores clientes por valor comprado num período.",

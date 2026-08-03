@@ -11,6 +11,7 @@ const PREFIXOS_LEITURA = [
   "/contas/pagar",
   "/contas/receber",
   "/nfe",
+  "/nfce",
   "/categorias",
   "/situacoes",
   "/formas-pagamentos",

@@ -5,6 +5,8 @@ describe("readOnlyGuard", () => {
   it("aceita paths de leitura conhecidos", () => {
     expect(validarPathLeitura("/nfe")).toBe(true);
     expect(validarPathLeitura("/nfe/123")).toBe(true);
+    expect(validarPathLeitura("/nfce")).toBe(true);
+    expect(validarPathLeitura("/nfce/123")).toBe(true);
     expect(validarPathLeitura("/contas/pagar")).toBe(true);
     expect(validarPathLeitura("/pedidos/vendas/123")).toBe(true);
     expect(validarPathLeitura("/pedidos/compras")).toBe(true);

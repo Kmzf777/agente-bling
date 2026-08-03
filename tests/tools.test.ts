@@ -10,6 +10,7 @@ describe("construirTools (AI SDK)", () => {
       "bling_consultar_api",
       "consultar_catalogo",
       "consultar_clientes",
+      "consultar_compras",
       "consultar_estoque",
       "consultar_faturamento",
       "consultar_financeiro",

@@ -180,7 +180,8 @@ infra extra — basta expor o backend via ngrok (ou qualquer URL pública) e reg
 - "Qual o faturamento do mês? E comparado ao mês passado?"
 - "O que está abaixo do estoque mínimo?" · "Quanto tenho do café X?"
 - "O que produzi essa semana?" · "Ordens de produção abertas?"
-- **NF-e/fiscal:** "Os produtos em NF foram CFOP de venda ou bonificação?" · "Quanto emiti em NF-e no mês?"
+- **NF-e/fiscal:** "Os produtos em NF foram CFOP de venda ou bonificação?" · "Quanto emiti em NF-e no mês?" · "Quantas unidades vendi em julho nos CFOP 5101/5102/6101/6102?" · "Vendas por produto no mês?"
+- **Compras/produção:** "Quantos produtos comprei/produzi em julho?" (separa Fabrica de fornecedores externos, com quantidade por item)
 - **Financeiro:** "Qual o total de contas pagas no mês passado?" (distingue **pago x em aberto**) · "Contas a receber vencendo essa semana?"
 - **"Gere o relatório de hoje"** (botão dedicado no chat).
 
