@@ -127,4 +127,29 @@ describe("consultarNotasFiscais", () => {
     expect(r.totalVenda).toBe(1200); // 120 * 10
     expect(r.paginacao.truncado).toBe(false);
   });
+
+  it("usa valorTotal do item (linha), não o valor unitário", async () => {
+    // API real: item = { valor: <unitário>, quantidade, valorTotal: <linha> }.
+    const client = clienteNotas({
+      "/nfe": [nf([{ descricao: "Café", cfop: "5102", valor: 23.9, quantidade: 45, valorTotal: 1075.5 }])],
+    });
+    const r: any = await consultarNotasFiscais({ client }, { periodo: "mes_passado" }, new Date("2026-07-15"));
+    expect(r.totalVenda).toBe(1075.5); // NÃO 23.9 (unitário)
+    expect(r.porProduto[0].valor).toBe(1075.5);
+    expect(r.porProduto[0].quantidade).toBe(45);
+    expect(r.porCfop[0].valor).toBe(1075.5);
+  });
+
+  it("tolera /nfce indisponível (HTTP 403) e retorna só NF-e, com aviso", async () => {
+    const client: any = {
+      getAllPages: async (path: string) => {
+        if (path === "/nfce") throw new Error("Bling GET /nfce falhou (HTTP 403)");
+        return { itens: [nf([{ descricao: "Café", cfop: "5102", valor: 100, quantidade: 1 }])], truncado: false };
+      },
+    };
+    const r: any = await consultarNotasFiscais({ client }, { periodo: "mes_passado" }, new Date("2026-07-15"));
+    expect(r.totalVenda).toBe(100); // não quebra; usa NF-e
+    expect(Array.isArray(r.avisos)).toBe(true);
+    expect(r.avisos.join(" ")).toMatch(/NFC-e/i);
+  });
 });

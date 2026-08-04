@@ -34,15 +34,30 @@ type Fonte = "nfe" | "nfce";
 
 const arred = (n: number) => Math.round(n * 100) / 100;
 
+// Valor da LINHA do item. A API v3 do Bling traz `valor` = valor UNITÁRIO e
+// `valorTotal` = total da linha (valor × quantidade). Somar `valor` subestimaria
+// gravemente a venda. Preferimos `valorTotal`; sem ele, caímos no `valor` (compat.).
+const valorLinha = (it: any) => (it?.valorTotal != null ? Number(it.valorTotal) || 0 : Number(it?.valor) || 0);
+
 export async function consultarNotasFiscais(deps: NfDeps, args: NfArgs, hoje: Date = new Date()) {
   const p = resolverPeriodo(args.periodo, hoje, args.dataInicial, args.dataFinal);
   const filtro = { dataInicial: p.dataInicial, dataFinal: p.dataFinal, tipo: args.tipo };
 
   // NF-e (modelo 55, B2B) + NFC-e (modelo 65, varejo) — endpoints separados na API v3.
-  const [nfe, nfce] = await Promise.all([
+  // allSettled: se um dos endpoints falhar (ex.: /nfce = HTTP 403 quando o app Bling não
+  // tem permissão de NFC-e), NÃO derruba a consulta inteira — seguimos com o que der certo.
+  const vazio = { itens: [] as any[], truncado: false };
+  const [nfeRes, nfceRes] = await Promise.allSettled([
     listarNotasFiscais(deps.client, filtro),
     listarNotasConsumidor(deps.client, filtro),
   ]);
+  const avisos: string[] = [];
+  const nfe = nfeRes.status === "fulfilled" ? nfeRes.value : vazio;
+  if (nfeRes.status === "rejected")
+    avisos.push(`Falha ao consultar NF-e: ${nfeRes.reason?.message ?? nfeRes.reason}.`);
+  const nfce = nfceRes.status === "fulfilled" ? nfceRes.value : vazio;
+  if (nfceRes.status === "rejected")
+    avisos.push("NFC-e (varejo, modelo 65) indisponível — o app Bling não tem permissão para esse recurso. O total considera apenas NF-e (modelo 55).");
   const todas: { nota: any; fonte: Fonte }[] = [
     ...nfe.itens.map((n: any) => ({ nota: n, fonte: "nfe" as const })),
     ...nfce.itens.map((n: any) => ({ nota: n, fonte: "nfce" as const })),
@@ -79,7 +94,7 @@ export async function consultarNotasFiscais(deps: NfDeps, args: NfArgs, hoje: Da
     for (const it of (nota.itens ?? [])) {
       const cfop = String(it.cfop ?? "sem-cfop");
       const q = Number(it.quantidade) || 0;
-      const v = Number(it.valor) || 0;
+      const v = valorLinha(it);
       const cur = porCfopMap.get(cfop) ?? { cfop, categoria: classificarCfop(cfop), valor: 0, quantidade: 0, itens: 0 };
       cur.valor += v; cur.quantidade += q; cur.itens += 1;
       porCfopMap.set(cfop, cur);
@@ -123,6 +138,7 @@ export async function consultarNotasFiscais(deps: NfDeps, args: NfArgs, hoje: Da
     totalBonificacao: somaCat("bonificacao"),
     totalOutras: somaCat("outra"),
     paginacao: { truncado },
+    avisos,
     observacao:
       "Inclui NF-e (modelo 55) + NFC-e (varejo, modelo 65). CFOP por item: VENDA = 5.1/6.1/5.4/6.4; BONIFICAÇÃO = 5910/6910/5911/6911; OUTRAS (remessa/transferência/devolução) NÃO são venda. Busca o detalhe de TODAS as notas do período (pode demorar em mês cheio). Use 'cfops' para filtrar por CFOPs específicos.",
   };
