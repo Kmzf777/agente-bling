@@ -38,7 +38,7 @@ export function construirTools(deps: ToolDeps) {
   const base = { client: deps.client, hoje };
   return {
     consultar_vendas: tool({
-      description: "Total vendido, nº de pedidos e ticket médio num período.",
+      description: "PEDIDOS de venda de um período: nº de pedidos e ticket médio (soma o total dos pedidos, por situação). NÃO é a venda fiscal. Para 'qual foi a venda/faturamento do mês?' NÃO use esta — use consultar_notas_fiscais e reporte totalVenda (venda = NF com CFOP de venda). Use consultar_vendas só quando o gestor pedir explicitamente nº de pedidos ou ticket médio.",
       inputSchema: z.object({ ...periodoReq }),
       execute: async (a) => consultarVendas(base, a as any),
     }),
@@ -48,7 +48,7 @@ export function construirTools(deps: ToolDeps) {
       execute: async (a) => consultarFaturamento({ ...base, situacoesFaturado: deps.situacoesFaturado }, a as any),
     }),
     consultar_notas_fiscais: tool({
-      description: "Notas fiscais (NF-e + NFC-e) do período: itens, CFOP por item, quantidade E valor por CFOP e por produto; separa venda de bonificação. Passe 'cfops' para filtrar CFOPs específicos (ex.: vendas = 5101,5102,6101,6102) e obter a quantidade+valor só desses. Busca TODAS as notas do período (pode demorar em mês cheio).",
+      description: "FONTE OFICIAL DE VENDA do período (use para 'qual foi a venda/faturamento do mês?'): notas fiscais (NF-e + NFC-e), CFOP por item, quantidade E valor por CFOP e por produto; separa venda de bonificação. Reporte totalVenda (soma só o CFOP de venda). Passe 'cfops' para filtrar CFOPs específicos (ex.: 5101,5102,6101,6102). Busca TODAS as notas do período (pode demorar em mês cheio).",
       inputSchema: z.object({ ...periodoReq, tipo: z.number().optional().describe("0=entrada, 1=saída"), cfops: z.array(z.string()).optional().describe("Lista de CFOPs para filtrar, ex.: ['5101','5102','6101','6102']") }),
       execute: async (a) => consultarNotasFiscais({ client: deps.client }, a as any, hoje),
     }),
