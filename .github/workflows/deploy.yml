@@ -60,7 +60,12 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.VPS_APP_PATH }}
-            git pull origin main
+            # Força a VPS a bater exatamente com origin/main. `git pull` falha se a árvore
+            # de trabalho estiver suja (ex.: arquivo rastreado alterado) — o reset --hard
+            # resolve. Seguro: .env, .bling-tokens.json e web/dist são gitignored e ficam.
+            git fetch origin main
+            git reset --hard origin/main
+            echo "Deploy em: $(git rev-parse --short HEAD)"
             npm ci --omit=dev
 
       - name: Copia build do frontend para VPS
