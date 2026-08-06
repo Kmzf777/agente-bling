@@ -59,6 +59,11 @@ export function iniciar() {
       });
     },
     telegramWebhook,
+    blingOAuth: {
+      clientId: cfg.blingClientId,
+      redirectUri: cfg.blingRedirectUri,
+      exchangeCode: (code, redirectUri) => tokenManager.exchangeCode(code, redirectUri),
+    },
   });
   app.listen(cfg.port, () => console.log(`Agente Bling Café rodando em http://localhost:${cfg.port}`));
 }
